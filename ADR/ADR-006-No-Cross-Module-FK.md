@@ -1,336 +1,171 @@
-# ADR-006: No Cross-Module Foreign Keys
+<div align="center">
 
-## Status
+# 🔗🚫 ADR-006: No Cross-Module Foreign Keys
 
-Accepted
+![Status](https://img.shields.io/badge/status-Accepted-success?style=for-the-badge)
+![Date](https://img.shields.io/badge/date-2026--07--20-blue?style=for-the-badge)
 
-## Date
-
-2026-07-20
+</div>
 
 ---
 
-# Context
+## 📋 Status
 
-PowerPulse is designed as a modular monolith using:
+✅ **Accepted**
 
-- Java
-- Spring Boot
-- Spring Modulith
-- PostgreSQL
-- Liquibase
+## 📅 Date
 
-The system contains multiple bounded contexts:
+`2026-07-20`
 
-- Identity
-- Energy Consumer
-- Organization Profile
-- Household Profile
-- Site
-- Energy Asset
-- Energy Operations
-- Fuel
-- Maintenance
-- Monitoring
-- Analytics
-- Recommendation
-- Notification
+---
 
-Although these modules run in one application and currently share one PostgreSQL instance, they represent independent business capabilities.
+## 🧭 Context
 
-A common architectural mistake in modular monoliths is allowing all modules to directly reference each other's database tables through foreign keys.
+PowerPulse is designed as a modular monolith using: `☕ Java` · `🍃 Spring Boot` · `🧩 Spring Modulith` · `🐘 PostgreSQL` · `🔄 Liquibase`
 
-This creates hidden coupling.
+The system contains multiple bounded contexts: `🪪 Identity` · `🌐 Energy Consumer` · `🏢 Organization Profile` · `🏠 Household Profile` · `📍 Site` · `🔋 Energy Asset` · `⚙️ Energy Operations` · `⛽ Fuel` · `🔧 Maintenance` · `📡 Monitoring` · `📊 Analytics` · `💬 Recommendation` · `🔔 Notification`
 
-Example:
+Although these modules run in one application and currently share one PostgreSQL instance, they represent **independent business capabilities**.
 
+> ⚠️ A common architectural mistake in modular monoliths is allowing all modules to directly reference each other's database tables through foreign keys — this creates hidden coupling.
 
-Asset Module
-
-    FK
-
-    ↓
-
-Site Module tables
-
+```
+🔋 Asset Module
+      FK
+      ↓
+📍 Site Module tables
+```
 
 Over time, database relationships become stronger than the business boundaries.
 
 ---
 
-# Decision
+## ⚖️ Decision
 
-PowerPulse will not use database foreign keys across module boundaries.
+<div align="center">
 
-Each module owns its own tables.
+> ### 🔗🚫 *PowerPulse will not use database foreign keys across module boundaries.*
 
-Relationships between modules are represented using:
+</div>
 
-- UUID references
-- Domain events
-- Application-level validation
+Each module owns its own tables. Relationships between modules are represented using: 🆔 UUID references · 📢 Domain events · ✅ Application-level validation
 
 ---
 
-# Database Ownership Rule
+## 🗄️ Database Ownership Rule
 
-Every module owns its persistence model.
+Every module owns its persistence model:
 
-Example:
+| Module | Owns |
+|---|---|
+| 🌐 Consumer | `energy_consumers` |
+| 🏢 Organization | `organization_profiles` |
+| 🏠 Household | `household_profiles` |
+| 📍 Site | `sites` |
+| 🔋 Asset | `energy_assets` |
+| ⚙️ Operations | `energy_operations` |
 
-## Consumer Module
-
-Owns:
-
-
-energy_consumers
-
-
----
-
-## Organization Module
-
-Owns:
-
-
-organization_profiles
-
+The owning module is responsible for: 📐 Schema changes · 🔄 Migration scripts · 🔒 Data integrity rules · 🎭 Domain behaviour
 
 ---
 
-## Household Module
+## ✅ Example: Correct Relationship
 
-Owns:
-
-
-household_profiles
-
-
----
-
-## Site Module
-
-Owns:
-
-
-sites
-
-
----
-
-## Asset Module
-
-Owns:
-
-
-energy_assets
-
-
----
-
-## Operations Module
-
-Owns:
-
-
-energy_operations
-
-
----
-
-The owning module is responsible for:
-
-- Schema changes
-- Migration scripts
-- Data integrity rules
-- Domain behaviour
-
----
-
-# Example: Correct Relationship
-
-A Site belongs to an Energy Consumer.
-
-The Site table contains:
+A Site belongs to an Energy Consumer:
 
 ```sql
 CREATE TABLE sites (
-
-    id UUID PRIMARY KEY,
-
-    consumer_id UUID NOT NULL,
-
-    name VARCHAR(255) NOT NULL,
-
-    created_at TIMESTAMP NOT NULL
-
+    id           UUID PRIMARY KEY,
+    consumer_id  UUID NOT NULL,
+    name         VARCHAR(255) NOT NULL,
+    created_at   TIMESTAMP NOT NULL
 );
+```
 
-The relationship is represented by:
+The relationship is represented by `consumer_id UUID`. The database does **not** contain:
 
-consumer_id UUID
-
-The database does not contain:
-
+```sql
 FOREIGN KEY (consumer_id)
 REFERENCES energy_consumers(id)
-Why No Cross-Module Foreign Keys?
-1. Preserve Bounded Context Boundaries
+```
 
-A module should own its internal model.
+---
 
-Without cross-module foreign keys:
+## 💡 Why No Cross-Module Foreign Keys?
 
-Consumer Module
+### 1️⃣ Preserve Bounded Context Boundaries
 
-owns:
+A module should own its internal model. Without cross-module foreign keys, 🌐 Consumer Module (`energy_consumers`) and 📍 Site Module (`sites`) remain independent.
 
-energy_consumers
+### 2️⃣ Prevent Database Coupling
 
-and:
+| With Foreign Keys | Without Them |
+|---|---|
+| `Asset migration` depends on `Site migration` | 🔋 Asset Module can evolve independently |
 
-Site Module
+> ⚠️ A small change in one module can break another.
 
-owns:
+### 3️⃣ Enable Future Service Extraction
 
-sites
+| Today | Future |
+|---|---|
+| `PowerPulse Application` — 🌐 Consumer · 📍 Site · 🔋 Asset Modules | 🚀 Consumer Service · 🚀 Site Service · 🚀 Asset Service |
 
-remain independent.
+> 🧩 The database boundary already exists — the extraction path is cleaner.
 
-2. Prevent Database Coupling
+### 4️⃣ Support Independent Deployment Evolution
 
-With foreign keys:
+Future modules may have: 🗄️ different storage strategies · 📈 different scaling requirements · 👥 different ownership teams.
 
-Asset migration
+> 🚫 Cross-module foreign keys prevent this.
 
-depends on
+---
 
-Site migration
+## 🔒 Maintaining Integrity Without Foreign Keys
 
-A small change in one module can break another module.
+> ℹ️ Removing database foreign keys does not mean removing integrity — it moves to the appropriate layer.
 
-Without them:
+| Method | Example |
+|---|---|
+| ✅ **Application Validation** | Before creating a Site: `Site Application Service` checks `Consumer exists` |
+| ⚖️ **Domain Rules** | A Site cannot exist without a valid Energy Consumer reference — the rule belongs to the Site domain |
+| 📢 **Domain Events** | `EnergyConsumerRegistered` → Site module becomes aware |
+| 🧪 **Automated Tests** | Module contracts verify valid references, event flows, and boundary rules |
 
-Asset Module
+---
 
-can evolve independently
-3. Enable Future Service Extraction
+## 🗂️ Liquibase Structure
 
-Today:
+Each module owns its migrations:
 
-PowerPulse Application
+```
+📁 db/changelog
+ ├── 🪪 identity
+ │     └── 001-create-users.xml
+ ├── 🌐 consumer
+ │     └── 001-create-energy-consumers.xml
+ ├── 📍 site
+ │     └── 001-create-sites.xml
+ └── 🔋 asset
+       └── 001-create-energy-assets.xml
+```
 
+---
 
-Consumer Module
+## ☕ JPA Implementation Rule
 
-Site Module
+Entities must **not** create cross-module object relationships.
 
-Asset Module
+**❌ Avoid** (inside `Site`):
 
-Future:
-
-Consumer Service
-
-Site Service
-
-Asset Service
-
-The database boundary already exists.
-
-The extraction path is cleaner.
-
-4. Support Independent Deployment Evolution
-
-Future modules may have:
-
-Different storage strategies
-Different scaling requirements
-Different ownership teams
-
-Cross-module foreign keys prevent this.
-
-Maintaining Integrity Without Foreign Keys
-
-Removing database foreign keys does not mean removing integrity.
-
-Integrity moves to the appropriate layer.
-
-1. Application Validation
-
-Example:
-
-Before creating a Site:
-
-Site Application Service
-
-checks:
-
-Consumer exists
-2. Domain Rules
-
-Example:
-
-A Site cannot exist without a valid Energy Consumer reference.
-
-The rule belongs to the Site domain.
-
-3. Domain Events
-
-Example:
-
-Consumer registration:
-
-EnergyConsumerRegistered
-
-        ↓
-
-Site module becomes aware
-4. Automated Tests
-
-Module contracts verify:
-
-Valid references
-Event flows
-Boundary rules
-Liquibase Structure
-
-Each module owns its migrations.
-
-Recommended structure:
-
-db/changelog
-
-├── identity
-
-│   └── 001-create-users.xml
-
-
-├── consumer
-
-│   └── 001-create-energy-consumers.xml
-
-
-├── site
-
-│   └── 001-create-sites.xml
-
-
-├── asset
-
-│   └── 001-create-energy-assets.xml
-JPA Implementation Rule
-
-Entities must not create cross-module object relationships.
-
-Avoid:
-
+```java
 @ManyToOne
 private EnergyConsumer consumer;
+```
 
-inside Site.
+**✅ Prefer:**
 
-Prefer:
-
+```java
 @Entity
 public class Site {
 
@@ -340,90 +175,59 @@ public class Site {
     private UUID consumerId;
 
 }
+```
 
-The module owns its model.
+> 🏠 The module owns its model.
 
-Event Communication Example
+---
 
-Instead of:
+## 📢 Event Communication Example
 
-Site Module
+| ❌ Instead of | ✅ Use |
+|---|---|
+| Site Module queries Consumer database table | Consumer Module publishes `EnergyConsumerRegistered` → Site Module reacts |
 
-queries
+---
 
-Consumer database table
+## 🔀 Alternatives Considered
 
-Use:
+### ❌ Foreign Keys Everywhere
 
-Consumer Module
+**Rejected** — creates database-level coupling between bounded contexts.
 
-publishes:
+### ❌ Separate Database Per Module Immediately
 
-EnergyConsumerRegistered
+**Rejected** — operational complexity is unnecessary at the current stage.
 
+### ❌ Shared Domain Database Model
 
-        ↓
+**Rejected** — violates DDD boundaries.
 
+---
 
-Site Module
+## ✅ Consequences — Positive
 
-reacts
-Alternatives Considered
-Foreign Keys Everywhere
+- 🧩 Strong module independence
+- 🎯 Cleaner DDD boundaries
+- 🛠️ Easier schema evolution
+- 🚀 Future microservice readiness
 
-Rejected.
+## ⚠️ Consequences — Negative
 
-Reason:
+> 🔓 The application must handle some integrity checks previously handled by PostgreSQL — this requires discipline.
 
-Creates database-level coupling between bounded contexts.
+---
 
-Separate Database Per Module Immediately
+## 🏁 Final Decision
 
-Rejected.
+<div align="center">
 
-Reason:
+> ### *PowerPulse modules own their own data.*
 
-Operational complexity is unnecessary at current stage.
+Cross-module relationships use: **🆔 UUID references + 📢 Domain events + ✅ Application validation**
 
-Shared Domain Database Model
+Database foreign keys are restricted to relationships **inside the same bounded context only**.
 
-Rejected.
+This keeps the architecture aligned with Domain Driven Design and preserves future evolution paths. 🔗🧩
 
-Reason:
-
-Violates DDD boundaries.
-
-Consequences
-Positive
-
-PowerPulse gains:
-
-Strong module independence
-Cleaner DDD boundaries
-Easier schema evolution
-Future microservice readiness
-Negative
-
-The application must handle some integrity checks previously handled by PostgreSQL.
-
-This requires discipline.
-
-Final Decision
-
-PowerPulse modules own their own data.
-
-Cross-module relationships use:
-
-UUID references
-
-+
-
-Domain events
-
-+
-
-Application validation
-
-Database foreign keys are restricted to relationships inside the same bounded context only.
-
-This keeps the architecture aligned with Domain Driven Design and preserves future evolution paths.
+</div>
