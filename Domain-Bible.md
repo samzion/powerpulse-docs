@@ -1,656 +1,318 @@
-# PowerPulse Domain Design Bible
+<div align="center">
 
-## Version 2.0
+# 🧠 PowerPulse Domain Design Bible
 
-## Domain Evolution: From Organization Intelligence to Energy Consumer Intelligence
+### *v2.0 — Domain Evolution: From Organization Intelligence to Energy Consumer Intelligence*
+
+![Domain](https://img.shields.io/badge/document-domain%20model-blueviolet?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-2.0-red?style=for-the-badge)
+![DDD](https://img.shields.io/badge/methodology-DDD-blue?style=for-the-badge)
+![Scope](https://img.shields.io/badge/scope-all%20energy%20consumers-orange?style=for-the-badge)
+
+</div>
 
 ---
 
-# 1. Purpose
+## 1️⃣ Purpose
 
 This document defines the core domain model of PowerPulse.
 
-PowerPulse is an energy intelligence platform designed to understand, measure, and optimize energy behaviour.
+PowerPulse is an energy intelligence platform designed to understand, measure, and optimize energy behaviour. The domain model is built around one fundamental concept:
 
-The domain model is built around one fundamental concept:
+<div align="center">
 
-> Energy consumers require intelligence about how energy is generated, stored, consumed, and paid for.
+> ### 🧭 *"Energy consumers require intelligence about how energy is generated, stored, consumed, and paid for."*
 
-The platform begins with Nigerian SMEs but is designed to support:
+</div>
 
-- Businesses
-- Households
-- Institutions
-- Communities
-- Distributed energy systems
+The platform begins with **Nigerian SMEs** but is designed to support: `🏢 Businesses` · `🏠 Households` · `🏛️ Institutions` · `🌆 Communities` · `🌐 Distributed energy systems`
 
 ---
 
-# 2. Core Domain Principle
+## 2️⃣ Core Domain Principle
 
-PowerPulse does not primarily model businesses.
+<div align="center">
 
-PowerPulse models:
+> ### 💎 *PowerPulse does not primarily model businesses. PowerPulse models Energy Behaviour.*
 
-> Energy behaviour.
+</div>
 
 Every consumer follows the same fundamental energy lifecycle:
 
-
-Energy Source
-
-  ↓
-
-Energy Conversion
-
-  ↓
-
-Energy Storage
-
-  ↓
-
-Energy Consumption
-
-  ↓
-
-Cost
-
-  ↓
-
-Operational Behaviour
-
-  ↓
-
-Optimization
-
+```
+⚡ Energy Source
+    └── 🔄 Energy Conversion
+          └── 🔋 Energy Storage
+                └── 🔌 Energy Consumption
+                      └── 💵 Cost
+                            └── 📊 Operational Behaviour
+                                  └── 🎯 Optimization
+```
 
 ---
 
-# 3. Domain Language
+## 3️⃣ Domain Language
 
-## Energy Consumer
+### 🌐 Energy Consumer
 
-The central domain concept.
+The **central domain concept**. An Energy Consumer is any entity that:
 
-An Energy Consumer is any entity that:
+- 🔌 consumes energy
+- 🔋 manages energy assets
+- 💵 pays for energy
+- 🧠 makes energy decisions
 
-- consumes energy
-- manages energy assets
-- pays for energy
-- makes energy decisions
+**Examples:** SME · Household · School · Hospital · Estate
 
-Examples:
+### 🧩 Consumer Types
 
-- SME
-- Household
-- School
-- Hospital
-- Estate
-
----
-
-## Consumer Types
-
-Initial supported types:
-
-
-BUSINESS
-
-HOUSEHOLD
-
-
-Future:
-
-
-INSTITUTION
-
-COMMUNITY
-
-GOVERNMENT
-
+| Status | Types |
+|---|---|
+| ✅ **Initial** | `BUSINESS` · `HOUSEHOLD` |
+| 🔮 **Future** | `INSTITUTION` · `COMMUNITY` · `GOVERNMENT` |
 
 ---
 
-# 4. High-Level Domain Model
+## 4️⃣ High-Level Domain Model
 
-The system evolves from:
+**From:**
 
+```
+🏢 Organization
+   └── 📍 Site
+         └── 🔋 Energy Asset
+               └── ⚙️ Energy Operation
+```
 
-Organization
+**To:**
 
-  |
-
-Site
-
-  |
-
-Energy Asset
-
-  |
-
-Energy Operation
-
-
-into:
-
-             Energy Consumer
-
-                   |
-
-    +--------------+--------------+
-
-    |                             |
-
-Organization Profile Household Profile
-
-    |                             |
-
-   Site                       Residence
-
-
-    |                             |
-
-Energy Assets Energy Assets
-
-          |
-
-  Energy Operations
+```
+                    🌐 Energy Consumer
+                          │
+              ┌───────────┴───────────┐
+              │                       │
+     🏢 Organization Profile    🏠 Household Profile
+              │                       │
+          📍 Site                 🏠 Residence
+              │                       │
+       🔋 Energy Assets         🔋 Energy Assets
+              │                       │
+              └───────────┬───────────┘
+                          │
+                ⚙️ Energy Operations
+```
 
 ---
 
-# 5. Bounded Contexts
+## 5️⃣ Bounded Contexts
 
-PowerPulse is divided into business capabilities.
+### 🪪 Identity Context
 
----
+**Responsibility:** Manages authentication and user identity.
 
-# Identity Context
-
-## Responsibility
-
-Manages authentication and user identity.
-
-Owns:
-
-- Users
-- Credentials
-- Sessions
-- Authentication state
-
-Does not own:
-
-- Businesses
-- Energy assets
-- Operations
+| ✅ Owns | 🚫 Does Not Own |
+|---|---|
+| Users · Credentials · Sessions · Authentication state | Businesses · Energy assets · Operations |
 
 ---
 
-# Consumer Context
+### 🌐 Consumer Context
 
-## Responsibility
+**Responsibility:** Manages the energy consumer lifecycle.
 
-Manages the energy consumer lifecycle.
+- 🧱 **Aggregate:** `EnergyConsumer`
+- 📦 **Owns:** Energy Consumer · Consumer type · Consumer status
 
-Owns:
-
-- Energy Consumer
-- Consumer type
-- Consumer status
-
-Aggregate:
-
-
-EnergyConsumer
-
-
----
-
-## Consumer Invariants
-
-An Energy Consumer:
-
+**⚖️ Invariants** — An Energy Consumer:
 - must have a valid identity
 - must have a consumer type
 - must have a lifecycle state
 
 ---
 
-# Organization Profile Context
+### 🏢 Organization Profile Context
 
-## Responsibility
+**Responsibility:** Business-specific information.
 
-Business-specific information.
+- 📦 **Owns:** Business name · Business category · Business classification · Registration information
 
-Owns:
-
-- Business name
-- Business category
-- Business classification
-- Registration information
-
-Example:
-
-
-Mama Ngozi Bakery
-
-
-belongs here.
+> Example: *Mama Ngozi Bakery* belongs here.
 
 ---
 
-# Household Profile Context
+### 🏠 Household Profile Context
 
-## Responsibility
+**Responsibility:** Residential-specific information.
 
-Residential-specific information.
+- 📦 **Owns:** Household identity · Residence information · Household characteristics
 
-Owns:
-
-- Household identity
-- Residence information
-- Household characteristics
-
-Example:
-
-
-Samson Residence
-
-
-belongs here.
+> Example: *Samson Residence* belongs here.
 
 ---
 
-# Site Context
+### 📍 Site Context
 
-## Responsibility
+**Responsibility:** Represents physical locations where energy activity occurs *(shop branch, home, factory, estate block)*.
 
-Represents physical locations where energy activity occurs.
-
-Examples:
-
-- Shop branch
-- Home
-- Factory
-- Estate block
-
-Owns:
-
-- Site identity
-- Location
-- Operational status
+- 📦 **Owns:** Site identity · Location · Operational status
 
 ---
 
-# Energy Asset Context
+### 🔋 Energy Asset Context
 
-## Responsibility
+**Responsibility:** Models physical energy equipment *(generator, inverter, solar system, battery, grid connection)*.
 
-Models physical energy equipment.
-
-Examples:
-
-- Generator
-- Inverter
-- Solar system
-- Battery
-- Grid connection
-
-Owns:
-
-- Asset identity
-- Asset type
-- Asset lifecycle
-- Asset characteristics
+- 📦 **Owns:** Asset identity · Asset type · Asset lifecycle · Asset characteristics
 
 ---
 
-# Energy Operations Context
+### ⚙️ Energy Operations Context
 
-## Responsibility
+**Responsibility:** Captures energy behaviour *(generator runtime, grid availability, battery usage, energy consumption)*.
 
-Captures energy behaviour.
-
-Examples:
-
-- Generator runtime
-- Grid availability
-- Battery usage
-- Energy consumption
-
-Owns:
-
-- Operational events
-- Runtime records
-- Consumption records
+- 📦 **Owns:** Operational events · Runtime records · Consumption records
 
 ---
 
-# Fuel Context
+### ⛽ Fuel Context
 
-## Responsibility
+**Responsibility:** Manages fuel intelligence.
 
-Manages fuel intelligence.
-
-Owns:
-
-- Fuel inventory
-- Fuel purchases
-- Fuel consumption
+- 📦 **Owns:** Fuel inventory · Fuel purchases · Fuel consumption
 
 ---
 
-# Maintenance Context
+### 🔧 Maintenance Context
 
-## Responsibility
+**Responsibility:** Manages equipment health.
 
-Manages equipment health.
-
-Owns:
-
-- Maintenance schedules
-- Repairs
-- Service history
+- 📦 **Owns:** Maintenance schedules · Repairs · Service history
 
 ---
 
-# Monitoring Context
+### 📡 Monitoring Context
 
-## Responsibility
+**Responsibility:** Observes system behaviour.
 
-Observes system behaviour.
-
-Owns:
-
-- Alerts
-- Threshold monitoring
-- Operational warnings
+- 📦 **Owns:** Alerts · Threshold monitoring · Operational warnings
 
 ---
 
-# Analytics Context
+### 📊 Analytics Context
 
-## Responsibility
+**Responsibility:** Transforms operational data into knowledge.
 
-Transforms operational data into knowledge.
-
-Owns:
-
-- Reports
-- Trends
-- Aggregations
+- 📦 **Owns:** Reports · Trends · Aggregations
 
 ---
 
-# Recommendation Context
+### 💬 Recommendation Context
 
-## Responsibility
+**Responsibility:** Provides actionable intelligence.
 
-Provides actionable intelligence.
-
-Owns:
-
-- Recommendations
-- Optimization rules
-- Decision support
+- 📦 **Owns:** Recommendations · Optimization rules · Decision support
 
 ---
 
-# 6. Aggregate Catalogue
+## 6️⃣ Aggregate Catalogue
 
-## EnergyConsumer Aggregate
-
-Root:
-
-
-EnergyConsumer
-
-
-Purpose:
-
-Protect consumer identity and lifecycle.
-
-Contains:
-
-- Consumer ID
-- Consumer Type
-- Status
+| 🧱 Aggregate | Root | Purpose |
+|---|---|---|
+| **Energy Consumer** | `EnergyConsumer` | Protect consumer identity and lifecycle *(Consumer ID · Consumer Type · Status)* |
+| **Organization** | `OrganizationProfile` | Business representation |
+| **Household** | `HouseholdProfile` | Residential representation |
+| **Site** | `Site` | Physical energy location |
+| **Energy Asset** | `EnergyAsset` | Protect asset lifecycle *(Generator · Inverter · Solar Panel · Battery)* |
+| **Energy Operation** | `EnergyOperation` | Capture energy activity |
+| **Fuel** | `FuelInventory` | Protect fuel state |
 
 ---
 
-## Organization Aggregate
+## 7️⃣ Domain Events
 
-Root:
-
-
-OrganizationProfile
-
-
-Purpose:
-
-Business representation.
-
----
-
-## Household Aggregate
-
-Root:
-
-
-HouseholdProfile
-
-
-Purpose:
-
-Residential representation.
+```
+📢 EnergyConsumerRegistered
+📢 OrganizationProfileCreated
+📢 HouseholdProfileCreated
+📢 SiteCreated
+📢 EnergyAssetRegistered
+📢 EnergyAssetActivated
+📢 EnergyOperationRecorded
+📢 FuelAdded
+📢 FuelConsumed
+📢 MaintenanceScheduled
+📢 MaintenanceCompleted
+📢 RecommendationGenerated
+```
 
 ---
 
-## Site Aggregate
+## 8️⃣ Relationships
 
-Root:
+> 🚫 **Important rule:** Modules do not share database ownership.
 
+Relationships are represented through: 🆔 UUID references · 📢 Domain events · 📞 Explicit contracts
 
-Site
-
-
-Purpose:
-
-Physical energy location.
+| ✅ Allowed | 🚫 Not Allowed |
+|---|---|
+| `EnergyAsset { siteId: UUID }` | `FOREIGN KEY(site_id)` |
 
 ---
 
-## EnergyAsset Aggregate
+## 9️⃣ Data Ownership
 
-Root:
-
-
-EnergyAsset
-
-
-Purpose:
-
-Protect asset lifecycle.
-
-Examples:
-
-
-Generator
-
-Inverter
-
-Solar Panel
-
-Battery
-
+| 🧩 Context | 🗄️ Owns |
+|---|---|
+| 🪪 Identity | Users |
+| 🌐 Consumer | Energy Consumers |
+| 🏢 Organization | Business Profiles |
+| 🏠 Household | Household Profiles |
+| 📍 Site | Sites |
+| 🔋 Asset | Energy Assets |
+| ⚙️ Operations | Energy Events |
+| ⛽ Fuel | Fuel Data |
+| 🔧 Maintenance | Maintenance Data |
+| 📊 Analytics | Reports |
 
 ---
 
-## EnergyOperation Aggregate
+## 🔟 Evolution Strategy
 
-Root:
+```
+🏗️ Foundation
+     └── ⚙️ Reliable Operations
+           └── 📈 Rich Data
+                 └── 🧠 Knowledge
+                       └── 💬 Intelligence
+                             └── 🎯 Optimization
+                                   └── 🤖 Autonomy
+```
 
-
-EnergyOperation
-
-
-Purpose:
-
-Capture energy activity.
-
----
-
-## Fuel Aggregate
-
-Root:
-
-
-FuelInventory
-
-
-Purpose:
-
-Protect fuel state.
+> 🔑 Intelligence depends on **trustworthy operational data**.
 
 ---
 
-# 7. Domain Events
+## 1️⃣1️⃣ Design Principle
 
-Major events:
+> 🚫 The platform must not build intelligence before understanding reality.
+>
+> 💭 A digital twin without operational history is only a data structure.
 
-
-EnergyConsumerRegistered
-
-OrganizationProfileCreated
-
-HouseholdProfileCreated
-
-SiteCreated
-
-EnergyAssetRegistered
-
-EnergyAssetActivated
-
-EnergyOperationRecorded
-
-FuelAdded
-
-FuelConsumed
-
-MaintenanceScheduled
-
-MaintenanceCompleted
-
-RecommendationGenerated
-
+**PowerPulse must first capture:** 🔋 assets · 📢 events · 💵 costs · 📊 behaviour — **before attempting prediction.**
 
 ---
 
-# 8. Relationships
+## 🏁 Final Domain Statement
 
-Important rule:
+<div align="center">
 
-Modules do not share database ownership.
+> ### *PowerPulse is an energy intelligence platform built around the concept of Energy Consumers.*
 
-Relationships are represented through:
+**🏢 Organizations are the first users.**
+**🏠 Households are natural extensions.**
 
-- UUID references
-- Domain events
-- Explicit contracts
+### *The true domain is energy behaviour.*
 
-Example:
+**The system exists to understand, measure, and improve how energy is used. 🌐⚡**
 
-
-EnergyAsset
-
-siteId UUID
-
-
-Not:
-
-
-FOREIGN KEY(site_id)
-
-
----
-
-# 9. Data Ownership
-
-| Context | Owns |
-|-|-|
-| Identity | Users |
-| Consumer | Energy Consumers |
-| Organization | Business Profiles |
-| Household | Household Profiles |
-| Site | Sites |
-| Asset | Energy Assets |
-| Operations | Energy Events |
-| Fuel | Fuel Data |
-| Maintenance | Maintenance Data |
-| Analytics | Reports |
-
----
-
-# 10. Evolution Strategy
-
-PowerPulse follows:
-
-
-Foundation
-
-↓
-
-Reliable Operations
-
-↓
-
-Rich Data
-
-↓
-
-Knowledge
-
-↓
-
-Intelligence
-
-↓
-
-Optimization
-
-↓
-
-Autonomy
-
-
-Intelligence depends on trustworthy operational data.
-
----
-
-# 11. Design Principle
-
-The platform must not build intelligence before understanding reality.
-
-A digital twin without operational history is only a data structure.
-
-PowerPulse must first capture:
-
-- assets
-- events
-- costs
-- behaviour
-
-before attempting prediction.
-
----
-
-# Final Domain Statement
-
-PowerPulse is an energy intelligence platform built around the concept of Energy Consumers.
-
-Organizations are the first users.
-
-Households are natural extensions.
-
-The true domain is energy behaviour.
-
-The system exists to understand, measure, and improve how energy is used.
+</div>
