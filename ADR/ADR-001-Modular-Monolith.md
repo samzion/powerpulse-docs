@@ -1,404 +1,217 @@
-# ADR-001: Modular Monolith Architecture
+<div align="center">
 
-## Status
+# 🏛️ ADR-001: Modular Monolith Architecture
 
-Accepted
+![Status](https://img.shields.io/badge/status-Accepted-success?style=for-the-badge)
+![Date](https://img.shields.io/badge/date-2026--07--20-blue?style=for-the-badge)
+![Scope](https://img.shields.io/badge/scope-all%20energy%20consumers-blueviolet?style=for-the-badge)
 
-## Date
-
-2026-07-20
+</div>
 
 ---
 
-# Context
+## 📋 Status
+
+✅ **Accepted**
+
+## 📅 Date
+
+`2026-07-20`
+
+---
+
+## 🧭 Context
 
 PowerPulse requires a software architecture capable of supporting:
 
-- Rapid MVP development
-- Strong domain boundaries
-- Independent business capabilities
-- Future growth into distributed systems
+- 🚀 Rapid MVP development
+- 🧩 Strong domain boundaries
+- 🏢 Independent business capabilities
+- 📈 Future growth into distributed systems
 
-The system must avoid two common failures:
+**The system must avoid two common failures:**
 
-1. A tightly coupled monolith that becomes difficult to change.
-2. Premature microservices that introduce operational complexity before scale requires them.
-
----
-
-# Decision
-
-PowerPulse will be built as a:
-
-# Modular Monolith
-
-using:
-
-- Java
-- Spring Boot
-- Spring Modulith
-- PostgreSQL
-- Liquibase
+1. 🔗 A tightly coupled monolith that becomes difficult to change
+2. 🐙 Premature microservices that introduce operational complexity before scale requires them
 
 ---
 
-# Why Modular Monolith
+## ⚖️ Decision
 
-A modular monolith provides:
+<div align="center">
 
-## Strong boundaries
+> ### 🏛️ *PowerPulse will be built as a Modular Monolith*
 
-Each business capability owns:
+</div>
 
-- Domain logic
-- Data ownership
-- Application services
-- Internal models
+**Using:** `☕ Java` · `🍃 Spring Boot` · `🧩 Spring Modulith` · `🐘 PostgreSQL` · `🔄 Liquibase`
 
 ---
 
-## Simple deployment
+## 💡 Why Modular Monolith
 
-Initially:
+### 🧱 Strong Boundaries
 
+Each business capability owns: 🧠 Domain logic · 🗄️ Data ownership · 🧵 Application services · 📦 Internal models
 
-One application
+### 🚀 Simple Deployment
 
-One deployment
+Initially: **one application · one deployment · one database instance**
 
-One database instance
-
-
----
-
-## Future extraction capability
+### 🔮 Future Extraction Capability
 
 Modules can later become services if required.
 
-Example:
-
-Today:
-
-
-powerpulse application
-
-|
-|
-
-fuel module
-
-
-Future:
-
-
-Fuel Intelligence Service
-
+| Today | Future |
+|---|---|
+| `powerpulse application` └── ⛽ fuel module | 🚀 `Fuel Intelligence Service` |
 
 ---
 
-# Module Structure
+## 🗂️ Module Structure
 
 The system is organized around bounded contexts.
 
-
-com.powerpulse
-
-├── identity
-
-├── consumer
-
-├── organization
-
-├── household
-
-├── site
-
-├── asset
-
-├── operations
-
-├── fuel
-
-├── maintenance
-
-├── monitoring
-
-├── analytics
-
-├── recommendation
-
-└── notification
-
+```
+📦 com.powerpulse
+ ├── 🪪 identity
+ ├── 🌐 consumer
+ ├── 🏢 organization
+ ├── 🏠 household
+ ├── 📍 site
+ ├── 🔋 asset
+ ├── ⚙️ operations
+ ├── ⛽ fuel
+ ├── 🔧 maintenance
+ ├── 📡 monitoring
+ ├── 📊 analytics
+ ├── 💬 recommendation
+ └── 🔔 notification
+```
 
 ---
 
-# Module Responsibilities
+## 🧩 Module Responsibilities
 
-## Identity
-
-Authentication and authorization.
-
----
-
-## Consumer
-
-Energy consumer lifecycle.
-
-Examples:
-
-- Business consumer
-- Household consumer
-
----
-
-## Organization
-
-Business-specific information.
+| Module | Responsibility |
+|---|---|
+| 🪪 **Identity** | Authentication and authorization |
+| 🌐 **Consumer** | Energy consumer lifecycle *(Business consumer · Household consumer)* |
+| 🏢 **Organization** | Business-specific information |
+| 🏠 **Household** | Residential-specific information |
+| 📍 **Site** | Physical energy locations |
+| 🔋 **Asset** | Energy equipment |
+| ⚙️ **Operations** | Energy behaviour and measurements |
+| ⛽ **Fuel** | Fuel intelligence |
+| 🔧 **Maintenance** | Asset health |
+| 📡 **Monitoring** | Operational observation |
+| 📊 **Analytics** | Data transformation into knowledge |
+| 💬 **Recommendation** | Decision support |
+| 🔔 **Notification** | Communication delivery |
 
 ---
 
-## Household
-
-Residential-specific information.
-
----
-
-## Site
-
-Physical energy locations.
-
----
-
-## Asset
-
-Energy equipment.
-
----
-
-## Operations
-
-Energy behaviour and measurements.
-
----
-
-## Fuel
-
-Fuel intelligence.
-
----
-
-## Maintenance
-
-Asset health.
-
----
-
-## Monitoring
-
-Operational observation.
-
----
-
-## Analytics
-
-Data transformation into knowledge.
-
----
-
-## Recommendation
-
-Decision support.
-
----
-
-## Notification
-
-Communication delivery.
-
----
-
-# Dependency Rules
+## 🔗 Dependency Rules
 
 Modules communicate through:
 
-## Domain Events
+### 📢 Domain Events
 
-Preferred for:
+Preferred for: state changes · notifications · asynchronous reactions
 
-- State changes
-- Notifications
-- Asynchronous reactions
+```
+📢 EnergyAssetRegistered
+        ↓
+⛽ Fuel module creates tracking
+```
 
-Example:
+### 📞 Explicit Contracts
 
+Used when an immediate response is required.
 
-EnergyAssetRegistered
-
-    ↓
-
-Fuel module creates tracking
-
-
----
-
-## Explicit Contracts
-
-Used when immediate response is required.
-
-Example:
-
-
-AssetApplicationService
-
-    ↓
-
-SiteExistenceChecker
-
+```
+🔋 AssetApplicationService
+        ↓
+📍 SiteExistenceChecker
+```
 
 ---
 
-# Forbidden Practices
+## 🚫 Forbidden Practices
 
-The following are prohibited:
-
-## Cross-module database access
-
-Invalid:
-
-
-Fuel module querying asset tables directly
-
+| ⚠️ Violation | Example |
+|---|---|
+| **Cross-module database access** | ⛽ Fuel module querying asset tables directly |
+| **Shared domain models** | 🔋 Asset importing 📍 Site entity |
+| **Circular dependencies** | `Site → Asset` **and** `Asset → Site` |
 
 ---
 
-## Shared domain models
-
-Invalid:
-
-
-Asset importing Site entity
-
-
----
-
-## Circular dependencies
-
-Invalid:
-
-
-Site → Asset
-
-Asset → Site
-
-
----
-
-# Package Boundary Rules
+## 📐 Package Boundary Rules
 
 Spring Modulith will enforce:
 
+```
+📁 module.api
+📁 module.application
+📁 module.domain
+📁 module.infrastructure
+```
 
-module.api
-
-module.application
-
-module.domain
-
-module.infrastructure
-
-
-Each module controls its internal implementation.
+> 🔒 Each module controls its internal implementation.
 
 ---
 
-# Database Ownership
+## 🗄️ Database Ownership
 
 Each module owns its tables.
 
-Example:
+| Module | Owns |
+|---|---|
+| 🌐 Consumer | `energy_consumers` |
+| 🔋 Asset | `energy_assets` |
+| 📍 Site | `sites` |
 
-Consumer module:
-
-
-energy_consumers
-
-
-Asset module:
-
-
-energy_assets
-
-
-Site module:
-
-
-sites
-
-
-Cross-module relationships use:
-
-
-UUID references
-
-
-not database foreign keys.
+> 🔗 Cross-module relationships use **UUID references**, not database foreign keys.
 
 ---
 
-# Consequences
+## ✅ Consequences — Positive
 
-## Positive
+- 🎯 Clear business ownership
+- 🧪 Easier testing
+- 🛠️ Easier maintenance
+- 🚀 Future extraction path
+- 🧠 Better alignment with DDD
 
-- Clear business ownership
-- Easier testing
-- Easier maintenance
-- Future extraction path
-- Better alignment with DDD
+## ⚠️ Consequences — Negative
 
----
-
-## Negative
-
-- More initial structure
-- Requires discipline
-- Developers must respect boundaries
+- 🏗️ More initial structure
+- 📐 Requires discipline
+- 🧩 Developers must respect boundaries
 
 ---
 
-# Alternatives Considered
+## 🔀 Alternatives Considered
 
-## Traditional Layered Monolith
+### ❌ Traditional Layered Monolith
 
-Rejected.
+**Rejected** — business boundaries become mixed.
 
-Reason:
+### ❌ Microservices From Day One
 
-Business boundaries become mixed.
-
----
-
-## Microservices From Day One
-
-Rejected.
-
-Reason:
-
-Operational complexity exceeds current needs.
+**Rejected** — operational complexity exceeds current needs.
 
 ---
 
-# Final Decision
+## 🏁 Final Decision
 
-PowerPulse will begin as a modular monolith.
+<div align="center">
 
-The architecture prioritizes:
+> ### *PowerPulse will begin as a modular monolith.*
 
+**The architecture prioritizes domain clarity over deployment complexity.**
 
-Domain clarity
+The system is designed to evolve from a single application into an energy intelligence platform. 🏛️🌐
 
-over
-
-deployment complexity
-
-
-The system is designed to evolve from a single application into an energy intelligence platform.
+</div>
