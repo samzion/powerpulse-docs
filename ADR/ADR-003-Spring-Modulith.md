@@ -1,223 +1,380 @@
-<div align="center">
+# ADR-003: Database Ownership and No Cross-Module Foreign Keys
 
-# 🗄️ ADR-003: Database Ownership and No Cross-Module Foreign Keys
+## Status
 
-![Status](https://img.shields.io/badge/status-Accepted-success?style=for-the-badge)
-![Date](https://img.shields.io/badge/date-2026--07--20-blue?style=for-the-badge)
-![Owner](https://img.shields.io/badge/owner-PowerPulse%20Engineering-orange?style=for-the-badge)
+Accepted
 
-</div>
+## Date
 
----
-
-## 📋 Status
-
-✅ **Accepted**
-
-## 📅 Date
-
-`2026-07-20`
-
-## 👥 Decision Owners
-
-PowerPulse Engineering
+2026-07-20
 
 ---
 
-## 🧭 Context
+# Context
 
-PowerPulse uses a **modular monolith** architecture. Although all modules initially run inside one application, each bounded context represents an independent business capability.
+PowerPulse is being developed as a modular monolith using:
 
-The system contains relationships between concepts:
+- Spring Boot
+- Spring Modulith
+- PostgreSQL
+- Liquibase
 
-```
-🏢 Organization
-    └── 📍 Site
-          └── 🔋 Energy Asset
-                └── ⚙️ Energy Operation
-```
+Although the application initially runs as a single deployment, it contains multiple business capabilities.
 
-A traditional relational design would naturally create foreign keys across tables:
+Examples:
+
+- Consumer management
+- Site management
+- Asset management
+- Energy operations
+- Fuel intelligence
+- Analytics
+
+Each capability has its own business rules and should maintain ownership of its data.
+
+A common failure in modular monoliths is allowing modules to share database structures freely.
+
+This creates:
+
+- Hidden coupling
+- Difficult migrations
+- Unclear ownership
+- Fragile architecture
+
+---
+
+# Decision
+
+Each PowerPulse module owns its database tables.
+
+Modules must not create database foreign keys across module boundaries.
+
+Cross-module relationships use:
+
+
+UUID references
+
+
+and communicate through:
+
+- Domain events
+- Application contracts
+- Explicit interfaces
+
+---
+
+# Database Ownership Model
+
+The ownership model follows bounded contexts.
+
+---
+
+# Consumer Module
+
+Owns:
+
+
+energy_consumers
+
+
+Example:
+
+
+energy_consumers
+
+id UUID PRIMARY KEY
+
+consumer_type
+
+status
+
+created_at
+
+updated_at
+
+
+---
+
+# Organization Module
+
+Owns:
+
+
+organization_profiles
+
+
+Example:
+
+
+organization_profiles
+
+id UUID PRIMARY KEY
+
+consumer_id UUID
+
+business_name
+
+business_type
+
+
+Notice:
+
+
+consumer_id
+
+
+is a reference only.
+
+It is not:
 
 ```sql
-energy_assets.site_id
+FOREIGN KEY (consumer_id)
+Household Module
 
-FOREIGN KEY(site_id)
-REFERENCES sites(id)
-```
+Owns:
 
-> ⚠️ However, this creates **strong coupling between modules**. The database becomes aware of domain boundaries — this conflicts with the modular architecture.
+household_profiles
 
----
+Example:
 
-## ⚖️ Decision
+household_profiles
 
-<div align="center">
+id UUID PRIMARY KEY
 
-> ### 🗄️ *PowerPulse modules own their own database structures. Cross-module relationships use UUID references only. No foreign keys exist between bounded contexts.*
+consumer_id UUID
 
-</div>
+household_name
+Site Module
 
-### ✅ Allowed
+Owns:
 
-```sql
--- Energy Asset table
+sites
+
+Example:
+
+sites
+
+id UUID PRIMARY KEY
+
+consumer_id UUID
+
+name
+
+location
+
+status
+Asset Module
+
+Owns:
+
 energy_assets
-  id       UUID PRIMARY KEY
-  site_id  UUID NOT NULL
-```
 
-> The asset module simply knows: *"This asset belongs to this site."*
+Example:
 
-### 🚫 Not Allowed
-
-```sql
 energy_assets
-  site_id UUID
 
-  FOREIGN KEY(site_id)
-  REFERENCES sites(id)
-```
+id UUID PRIMARY KEY
 
-> The database should **not** enforce relationships across module boundaries.
+site_id UUID
 
----
+asset_type
 
-## 💡 Reasoning
+status
+Operations Module
 
-### 1️⃣ Module Independence
+Owns:
 
-Each module owns its data.
+energy_operations
 
-| 🧩 Module | Owns |
-|---|---|
-| 📍 Site | `sites` |
-| 🔋 Asset | `energy_assets` |
+Example:
 
-> 🚫 The Asset module should not depend on Site's database structure.
+energy_operations
 
-### 2️⃣ Future Service Extraction
+id UUID PRIMARY KEY
 
-| Today | Future |
-|---|---|
-| `PowerPulse Application` └── 📍 Site Module + 🔋 Asset Module | 📍 `Site Service` ⟷ 🌐 API ⟷ 🔋 `Asset Service` |
+asset_id UUID
 
-> 🔗 Cross-service foreign keys would be **impossible**. UUID references already follow this future model.
+operation_type
 
-### 3️⃣ Clear Ownership
+energy_consumed
 
-Database ownership mirrors business ownership.
+recorded_at
+Fuel Module
 
-| Module | Owns |
-|---|---|
-| 🔋 **Asset** | Asset lifecycle · Asset table · Asset rules |
-| 📍 **Site** | Site lifecycle · Site table · Site rules |
+Owns:
 
-### 4️⃣ Prevent Hidden Coupling
+fuel_inventory
 
-Foreign keys create hidden dependencies — e.g. changing the Site schema could break Asset migrations.
+fuel_transactions
+Maintenance Module
 
-> ✅ Without cross-module constraints, each module evolves independently.
+Owns:
 
----
+maintenance_records
+Analytics Module
 
-## 🔒 Data Integrity Strategy
+Owns:
 
-Removing foreign keys does **not** mean removing validation — integrity moves to the **application boundary**.
+reports
 
-```
-📥 RegisterEnergyAsset
+analytics_results
+Why No Cross-Module Foreign Keys?
+1. Preserve Module Independence
+
+Without cross-module constraints:
+
+Asset Module
+
+does not depend on the internal database structure of:
+
+Site Module
+2. Enable Future Extraction
+
+Today:
+
+PowerPulse Application
+
+    |
+    |
+ Asset Module
+
+Future:
+
+Asset Service
+
+    |
+    |
+ Site Service
+
+The database boundary already exists.
+
+3. Allow Independent Evolution
+
+A module can change its internal schema without forcing unrelated modules to migrate.
+
+Example
+Bad Design
+
+Asset table:
+
+CREATE TABLE energy_assets (
+
+id UUID,
+
+site_id UUID REFERENCES sites(id)
+
+);
+
+Problem:
+
+Asset module now owns knowledge of Site database implementation.
+
+Correct Design
+CREATE TABLE energy_assets (
+
+id UUID PRIMARY KEY,
+
+site_id UUID NOT NULL
+
+);
+
+The relationship exists.
+
+The ownership does not.
+
+Referential Integrity
+
+Without database foreign keys, integrity is maintained through:
+
+Application Rules
+
+Example:
+
+Before creating an asset:
+
+Check SiteExists(siteId)
+Domain Events
+
+Example:
+
+SiteCreated
+
         ↓
-✅ Validate site exists
-        ↓
-🔋 Create asset
-```
 
-Validation happens through: 🧠 domain services · 🧵 application services · 📞 module APIs
+Asset module becomes aware
+Automated Tests
 
----
+Module contracts ensure consistency.
 
-## 📡 Cross-Module Communication
+Migration Ownership
 
-| Method | Example |
-|---|---|
-| 📢 **Domain Events** | Site module publishes `SiteCreated` → Asset module can react |
-| 📞 **Explicit Module APIs** | Asset module requests `SiteExistenceChecker` — the dependency is visible in code |
+Each module owns its Liquibase migrations.
 
----
+Example:
 
-## ✅ Consequences — Positive
+db/changelog
 
-| ✨ Benefit | Detail |
-|---|---|
-| 🧩 **Strong Module Boundaries** | Modules remain independently owned |
-| 🧪 **Easier Testing** | Modules can be tested without requiring the entire database |
-| 🚀 **Future Distributed Readiness** | Design naturally supports service extraction |
-| 🎯 **Better Domain Alignment** | Database structure reflects business boundaries |
+├── consumer
 
----
+│   └── 001-create-energy-consumers.xml
 
-## ⚠️ Consequences — Negative
 
-| 🚨 Cost | Mitigation |
-|---|---|
-| 🔓 **Reduced Database-Level Protection** — an asset may technically contain a nonexistent site UUID | Application validation |
-| 🧵 **More Application Responsibility** | Developers must consciously maintain integrity |
-| 📐 **More Design Discipline Required** | Engineers cannot rely on database constraints to hide poor boundaries |
+├── site
 
----
+│   └── 001-create-sites.xml
 
-## 🔀 Alternatives Considered
 
-### ❌ Alternative 1: Foreign Keys Across All Tables
+├── asset
 
-**Rejected because:** 🔗 creates coupling · 🫥 weakens module ownership · 🚧 makes future extraction difficult
+│   └── 001-create-energy-assets.xml
+Consequences
+Positive
+Strong module boundaries
+Clear ownership
+Easier refactoring
+Future service extraction path
+Cleaner DDD implementation
+Negative
+Some integrity checks move from database to application
+More discipline required
+Developers must respect ownership rules
+Alternatives Considered
+Shared Database With Foreign Keys Everywhere
 
-### ⏸️ Alternative 2: Separate Database Per Module
+Rejected.
 
-**Deferred** — a future option, but unnecessary complexity at the current stage. The modular monolith approach provides boundaries first.
+Reason:
 
-### ❌ Alternative 3: Single Shared Database Model
+Creates a distributed monolith inside one database.
 
-**Rejected because:** 🔗 encourages direct table coupling · 🫥 makes ownership unclear · 📇 promotes CRUD thinking
+Separate Database Per Module
 
----
+Deferred.
 
-## 📏 Implementation Rules
+Reason:
 
-| # | Rule |
-|---|---|
-| 1️⃣ | Every module owns its tables |
-| 2️⃣ | Cross-module references use **UUID** |
-| 3️⃣ | **No** cross-module database foreign keys |
-| 4️⃣ | Module relationships must be expressed through events, interfaces, or application contracts |
-| 5️⃣ | Historical data must remain **immutable** |
+Operational complexity is unnecessary at current scale.
 
----
+Final Decision
 
-## 🗂️ Example Module Ownership
+PowerPulse will use:
 
-| 🧩 Module | 🗄️ Owns Tables |
-|---|---|
-| 🪪 Identity | `users`, `credentials` |
-| 🏢 Organization | `organizations`, `verification_credentials` |
-| 📍 Site | `sites` |
-| 🔋 Asset | `energy_assets` |
-| ⚙️ Operations | `energy_operations` |
-| ⛽ Fuel | `fuel_inventory`, `fuel_transactions` |
-| 🔧 Maintenance | `maintenance_records` |
-| 📡 Monitoring | `alerts` |
-| 📊 Analytics | `reports` |
+One PostgreSQL instance
 
----
++
 
-## 🏁 Final Decision Statement
+Module-owned tables
 
-<div align="center">
++
 
-> ### *PowerPulse will treat database ownership as an extension of domain ownership.*
-> ### *Modules must remain independent business capabilities.*
+UUID references
 
-**The database supports the architecture. The database does not define the architecture. 🗄️🧩**
++
 
-</div>
+No cross-module foreign keys
+
+The database structure reflects the business boundaries.
+
+The goal is not only storing data.
+
+The goal is preserving architecture.
