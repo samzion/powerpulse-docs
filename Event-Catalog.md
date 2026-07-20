@@ -1,815 +1,340 @@
-# PowerPulse Event Catalog
+<div align="center">
 
-## Version 2.0
+# 📡 PowerPulse Event Catalog
 
-## Domain Events After Energy Consumer Abstraction
+### *v2.0 — Domain Events After Energy Consumer Abstraction*
+
+![Events](https://img.shields.io/badge/document-event%20catalog-e67e22?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-2.0-red?style=for-the-badge)
+![Count](https://img.shields.io/badge/events-20-blue?style=for-the-badge)
+
+</div>
 
 ---
 
-# 1. Purpose
+## 1️⃣ Purpose
 
 This document defines the domain events within PowerPulse.
 
-Domain events represent:
+**Domain events represent:**
+- 💥 Something important happened in the business domain
+- 🔄 A state transition occurred
+- 📡 Other modules may react
 
-- Something important happened in the business domain
-- A state transition occurred
-- Other modules may react
+> 🚫 Events are **not** database notifications. **They represent business meaning.**
 
-Events are not database notifications.
-
-Events represent business meaning.
-
----
-
-# 2. Event Design Principles
-
-PowerPulse follows these rules:
-
-## Rule 1
-
-Events are named in past tense.
-
-Example:
-
-
-EnergyConsumerRegistered
-
-
-Not:
-
-
-RegisterEnergyConsumer
-
-
----
-
-## Rule 2
-
-The publishing module owns the event meaning.
-
-Consumers only react.
-
----
-
-## Rule 3
-
-Events reduce coupling between modules.
-
-A module does not need to know who listens.
-
----
-
-## Rule 4
-
-Events contain business facts.
-
-They do not contain database details.
-
----
-
-# 3. Event Flow Overview
-
-The core PowerPulse lifecycle:
-
-
-UserRegistered
-
-    ↓
-
-EnergyConsumerRegistered
-
-    ↓
-
-ProfileCreated
-
-    ↓
-
-SiteCreated
-
-    ↓
-
-EnergyAssetRegistered
-
-    ↓
-
-EnergyOperationRecorded
-
-    ↓
-
-FuelConsumed
-
-    ↓
-
-AnalyticsGenerated
-
-    ↓
-
-RecommendationGenerated
-
-
----
-
-# 4. Identity Events
-
-## UserRegistered
-
-### Publisher
-
-Identity Module
-
----
-
-### Meaning
-
-A new user account has been created.
-
----
-
-### Payload
-
-
-userId UUID
-
-email
-
-registeredAt
-
-
----
-
-### Consumers
-
-- Consumer Module
-- Notification Module
-
----
-
-# 5. Consumer Events
-
-## EnergyConsumerRegistered
-
-### Publisher
-
-Consumer Module
-
----
-
-### Meaning
-
-A new energy consumer has entered PowerPulse.
-
----
-
-### Payload
-
-
-consumerId UUID
-
-consumerType
-
-createdAt
-
-
----
-
-### Consumers
-
-- Organization Profile Module
-- Household Profile Module
-- Notification Module
-
----
-
-# Consumer Types
-
-Initial:
-
-
-BUSINESS
-
-HOUSEHOLD
-
-
-Future:
-
-
-INSTITUTION
-
-COMMUNITY
-
-
----
-
-## EnergyConsumerActivated
-
-### Publisher
-
-Consumer Module
-
----
-
-### Meaning
-
-Consumer is now active and can operate.
-
----
-
-### Payload
-
-
-consumerId UUID
-
-activatedAt
-
-
----
-
-### Consumers
-
-- Site Module
-- Billing Module
-- Notification Module
-
----
-
-## EnergyConsumerSuspended
-
-### Publisher
-
-Consumer Module
-
----
-
-### Meaning
-
-Consumer access has been suspended.
-
----
-
-### Payload
-
-
-consumerId UUID
-
-reason
-
-suspendedAt
-
-
----
-
-### Consumers
-
-- Site Module
-- Billing Module
-
----
-
-# 6. Organization Profile Events
-
-## OrganizationProfileCreated
-
-### Publisher
-
-Organization Profile Module
-
----
-
-### Meaning
-
-Business information has been created.
-
----
-
-### Payload
-
-
-organizationId UUID
-
-consumerId UUID
-
-businessType
-
-createdAt
-
-
----
-
-### Consumers
-
-- Site Module
-- Analytics Module
-
----
-
-## OrganizationProfileUpdated
-
-### Publisher
-
-Organization Profile Module
-
----
-
-### Consumers
-
-- Analytics Module
-
 ---
 
-# 7. Household Profile Events
+## 2️⃣ Event Design Principles
 
-## HouseholdProfileCreated
+| # | Rule |
+|---|---|
+| 1️⃣ | Events are named in **past tense** — `EnergyConsumerRegistered`, not `RegisterEnergyConsumer` |
+| 2️⃣ | The **publishing module** owns the event meaning; consumers only react |
+| 3️⃣ | Events **reduce coupling** — a module does not need to know who listens |
+| 4️⃣ | Events contain **business facts**, not database details |
 
-### Publisher
-
-Household Profile Module
-
----
-
-### Meaning
-
-Residential profile created.
-
----
-
-### Payload
-
-
-householdId UUID
-
-consumerId UUID
-
-createdAt
-
-
----
-
-### Consumers
-
-- Site Module
-- Analytics Module
-
----
-
-## HouseholdProfileUpdated
-
-### Publisher
-
-Household Profile Module
-
----
-
-### Consumers
-
-- Analytics Module
-
----
-
-# 8. Site Events
-
-## SiteCreated
-
-### Publisher
-
-Site Module
-
----
-
-### Meaning
-
-A physical energy location exists.
-
----
-
-### Payload
-
-
-siteId UUID
-
-consumerId UUID
-
-createdAt
-
-
----
-
-### Consumers
-
-- Energy Asset Module
-- Analytics Module
-
----
-
-## SiteActivated
-
-### Publisher
-
-Site Module
-
----
-
-### Consumers
-
-- Asset Module
-- Monitoring Module
-
----
-
-## SiteDeactivated
-
-### Publisher
-
-Site Module
-
----
-
-### Consumers
-
-- Asset Module
-- Monitoring Module
-
----
-
-# 9. Energy Asset Events
-
-## EnergyAssetRegistered
-
-### Publisher
-
-Energy Asset Module
-
----
-
-### Meaning
-
-A physical energy asset has been registered.
-
----
-
-### Payload
-
-
-assetId UUID
-
-siteId UUID
-
-assetType
-
-registeredAt
-
-
----
-
-### Consumers
-
-- Operations Module
-- Fuel Module
-- Maintenance Module
-- Monitoring Module
-
----
-
-## EnergyAssetActivated
-
-### Publisher
-
-Energy Asset Module
-
----
-
-### Meaning
-
-Asset is operational.
-
----
-
-### Consumers
-
-- Operations Module
-- Monitoring Module
-
----
-
-## EnergyAssetRetired
-
-### Publisher
-
-Energy Asset Module
-
----
-
-### Consumers
-
-- Operations Module
-- Maintenance Module
-- Analytics Module
-
----
-
-# 10. Energy Operation Events
-
-## EnergyOperationRecorded
-
-### Publisher
-
-Energy Operations Module
-
----
-
-### Meaning
-
-An energy activity occurred.
-
----
-
-### Payload
-
-
-operationId UUID
-
-assetId UUID
-
-operationType
-
-energyConsumed
-
-recordedAt
-
-
 ---
 
-### Consumers
+## 3️⃣ Event Flow Overview
 
-- Analytics Module
-- Fuel Module
-- Monitoring Module
+```
+🪪 UserRegistered
+    └── 🌐 EnergyConsumerRegistered
+          └── 🏢/🏠 ProfileCreated
+                └── 📍 SiteCreated
+                      └── 🔋 EnergyAssetRegistered
+                            └── ⚙️ EnergyOperationRecorded
+                                  └── ⛽ FuelConsumed
+                                        └── 📊 AnalyticsGenerated
+                                              └── 💬 RecommendationGenerated
+```
 
 ---
 
-# 11. Fuel Events
+## 4️⃣ 🪪 Identity Events
 
-## FuelAdded
+### 📢 `UserRegistered`
 
-### Publisher
+| 🧩 Field | Detail |
+|---|---|
+| **Publisher** | 🪪 Identity Module |
+| **Meaning** | A new user account has been created |
+| **Payload** | `userId` UUID · `email` · `registeredAt` |
+| **Consumers** | 🌐 Consumer Module · 🔔 Notification Module |
 
-Fuel Module
-
----
-
-### Meaning
-
-Fuel inventory increased.
-
 ---
-
-### Payload
 
+## 5️⃣ 🌐 Consumer Events
 
-inventoryId UUID
+### 📢 `EnergyConsumerRegistered`
 
-quantity
+| 🧩 Field | Detail |
+|---|---|
+| **Publisher** | 🌐 Consumer Module |
+| **Meaning** | A new energy consumer has entered PowerPulse |
+| **Payload** | `consumerId` UUID · `consumerType` · `createdAt` |
+| **Consumers** | 🏢 Organization Profile Module · 🏠 Household Profile Module · 🔔 Notification Module |
 
-fuelType
+**Consumer Types:** ✅ Initial: `BUSINESS` · `HOUSEHOLD` — 🔮 Future: `INSTITUTION` · `COMMUNITY`
 
-timestamp
-
-
----
-
-### Consumers
-
-- Analytics Module
-
 ---
 
-## FuelConsumed
+### 📢 `EnergyConsumerActivated`
 
-### Publisher
+| 🧩 Field | Detail |
+|---|---|
+| **Publisher** | 🌐 Consumer Module |
+| **Meaning** | Consumer is now active and can operate |
+| **Payload** | `consumerId` UUID · `activatedAt` |
+| **Consumers** | 📍 Site Module · 🧾 Billing Module · 🔔 Notification Module |
 
-Fuel Module
-
 ---
 
-### Meaning
+### 📢 `EnergyConsumerSuspended`
 
-Fuel was used.
+| 🧩 Field | Detail |
+|---|---|
+| **Publisher** | 🌐 Consumer Module |
+| **Meaning** | Consumer access has been suspended |
+| **Payload** | `consumerId` UUID · `reason` · `suspendedAt` |
+| **Consumers** | 📍 Site Module · 🧾 Billing Module |
 
 ---
-
-### Payload
-
-
-assetId UUID
-
-quantity
 
-timestamp
+## 6️⃣ 🏢 Organization Profile Events
 
+### 📢 `OrganizationProfileCreated`
 
----
+| 🧩 Field | Detail |
+|---|---|
+| **Publisher** | 🏢 Organization Profile Module |
+| **Meaning** | Business information has been created |
+| **Payload** | `organizationId` UUID · `consumerId` UUID · `businessType` · `createdAt` |
+| **Consumers** | 📍 Site Module · 📊 Analytics Module |
 
-### Consumers
+### 📢 `OrganizationProfileUpdated`
 
-- Analytics Module
-- Recommendation Module
+| 🧩 Field | Detail |
+|---|---|
+| **Publisher** | 🏢 Organization Profile Module |
+| **Consumers** | 📊 Analytics Module |
 
 ---
 
-## FuelLevelLow
+## 7️⃣ 🏠 Household Profile Events
 
-### Publisher
+### 📢 `HouseholdProfileCreated`
 
-Fuel Module
-
----
+| 🧩 Field | Detail |
+|---|---|
+| **Publisher** | 🏠 Household Profile Module |
+| **Meaning** | Residential profile created |
+| **Payload** | `householdId` UUID · `consumerId` UUID · `createdAt` |
+| **Consumers** | 📍 Site Module · 📊 Analytics Module |
 
-### Meaning
+### 📢 `HouseholdProfileUpdated`
 
-Fuel requires attention.
+| 🧩 Field | Detail |
+|---|---|
+| **Publisher** | 🏠 Household Profile Module |
+| **Consumers** | 📊 Analytics Module |
 
 ---
 
-### Consumers
+## 8️⃣ 📍 Site Events
 
-- Notification Module
-- Recommendation Module
+### 📢 `SiteCreated`
 
----
+| 🧩 Field | Detail |
+|---|---|
+| **Publisher** | 📍 Site Module |
+| **Meaning** | A physical energy location exists |
+| **Payload** | `siteId` UUID · `consumerId` UUID · `createdAt` |
+| **Consumers** | 🔋 Energy Asset Module · 📊 Analytics Module |
 
-# 12. Maintenance Events
+### 📢 `SiteActivated`
 
-## MaintenanceScheduled
+| 🧩 Field | Detail |
+|---|---|
+| **Publisher** | 📍 Site Module |
+| **Consumers** | 🔋 Asset Module · 📡 Monitoring Module |
 
-### Publisher
+### 📢 `SiteDeactivated`
 
-Maintenance Module
+| 🧩 Field | Detail |
+|---|---|
+| **Publisher** | 📍 Site Module |
+| **Consumers** | 🔋 Asset Module · 📡 Monitoring Module |
 
 ---
-
-### Consumers
-
-- Notification Module
-- Asset Module
 
----
+## 9️⃣ 🔋 Energy Asset Events
 
-## MaintenanceCompleted
+### 📢 `EnergyAssetRegistered`
 
-### Publisher
+| 🧩 Field | Detail |
+|---|---|
+| **Publisher** | 🔋 Energy Asset Module |
+| **Meaning** | A physical energy asset has been registered |
+| **Payload** | `assetId` UUID · `siteId` UUID · `assetType` · `registeredAt` |
+| **Consumers** | ⚙️ Operations Module · ⛽ Fuel Module · 🔧 Maintenance Module · 📡 Monitoring Module |
 
-Maintenance Module
+### 📢 `EnergyAssetActivated`
 
----
+| 🧩 Field | Detail |
+|---|---|
+| **Publisher** | 🔋 Energy Asset Module |
+| **Meaning** | Asset is operational |
+| **Consumers** | ⚙️ Operations Module · 📡 Monitoring Module |
 
-### Consumers
+### 📢 `EnergyAssetRetired`
 
-- Analytics Module
-- Asset Module
+| 🧩 Field | Detail |
+|---|---|
+| **Publisher** | 🔋 Energy Asset Module |
+| **Consumers** | ⚙️ Operations Module · 🔧 Maintenance Module · 📊 Analytics Module |
 
 ---
-
-# 13. Monitoring Events
 
-## AlertTriggered
+## 🔟 ⚙️ Energy Operation Events
 
-### Publisher
+### 📢 `EnergyOperationRecorded`
 
-Monitoring Module
+| 🧩 Field | Detail |
+|---|---|
+| **Publisher** | ⚙️ Energy Operations Module |
+| **Meaning** | An energy activity occurred |
+| **Payload** | `operationId` UUID · `assetId` UUID · `operationType` · `energyConsumed` · `recordedAt` |
+| **Consumers** | 📊 Analytics Module · ⛽ Fuel Module · 📡 Monitoring Module |
 
 ---
 
-### Payload
+## 1️⃣1️⃣ ⛽ Fuel Events
 
+### 📢 `FuelAdded`
 
-alertId
+| 🧩 Field | Detail |
+|---|---|
+| **Publisher** | ⛽ Fuel Module |
+| **Meaning** | Fuel inventory increased |
+| **Payload** | `inventoryId` UUID · `quantity` · `fuelType` · `timestamp` |
+| **Consumers** | 📊 Analytics Module |
 
-assetId
+### 📢 `FuelConsumed`
 
-severity
+| 🧩 Field | Detail |
+|---|---|
+| **Publisher** | ⛽ Fuel Module |
+| **Meaning** | Fuel was used |
+| **Payload** | `assetId` UUID · `quantity` · `timestamp` |
+| **Consumers** | 📊 Analytics Module · 💬 Recommendation Module |
 
-message
+### 📢 `FuelLevelLow`
 
+| 🧩 Field | Detail |
+|---|---|
+| **Publisher** | ⛽ Fuel Module |
+| **Meaning** | Fuel requires attention |
+| **Consumers** | 🔔 Notification Module · 💬 Recommendation Module |
 
 ---
 
-### Consumers
+## 1️⃣2️⃣ 🔧 Maintenance Events
 
-- Notification Module
-- Recommendation Module
+### 📢 `MaintenanceScheduled`
 
----
+| 🧩 Field | Detail |
+|---|---|
+| **Publisher** | 🔧 Maintenance Module |
+| **Consumers** | 🔔 Notification Module · 🔋 Asset Module |
 
-## AlertResolved
+### 📢 `MaintenanceCompleted`
 
-### Publisher
+| 🧩 Field | Detail |
+|---|---|
+| **Publisher** | 🔧 Maintenance Module |
+| **Consumers** | 📊 Analytics Module · 🔋 Asset Module |
 
-Monitoring Module
-
 ---
-
-### Consumers
 
-- Analytics Module
+## 1️⃣3️⃣ 📡 Monitoring Events
 
----
-
-# 14. Analytics Events
+### 📢 `AlertTriggered`
 
-## AnalyticsGenerated
+| 🧩 Field | Detail |
+|---|---|
+| **Publisher** | 📡 Monitoring Module |
+| **Payload** | `alertId` · `assetId` · `severity` · `message` |
+| **Consumers** | 🔔 Notification Module · 💬 Recommendation Module |
 
-### Publisher
+### 📢 `AlertResolved`
 
-Analytics Module
+| 🧩 Field | Detail |
+|---|---|
+| **Publisher** | 📡 Monitoring Module |
+| **Consumers** | 📊 Analytics Module |
 
 ---
 
-### Meaning
-
-Operational data has been transformed into insight.
-
----
+## 1️⃣4️⃣ 📊 Analytics Events
 
-### Consumers
+### 📢 `AnalyticsGenerated`
 
-- Recommendation Module
-- Notification Module
+| 🧩 Field | Detail |
+|---|---|
+| **Publisher** | 📊 Analytics Module |
+| **Meaning** | Operational data has been transformed into insight |
+| **Consumers** | 💬 Recommendation Module · 🔔 Notification Module |
 
 ---
 
-# 15. Recommendation Events
+## 1️⃣5️⃣ 💬 Recommendation Events
 
-## RecommendationGenerated
+### 📢 `RecommendationGenerated`
 
-### Publisher
+| 🧩 Field | Detail |
+|---|---|
+| **Publisher** | 💬 Recommendation Module |
+| **Meaning** | The system produced actionable guidance |
+| **Payload** | `recommendationId` · `consumerId` · `category` · `priority` |
+| **Consumers** | 🔔 Notification Module · 🖥️ User Interface |
 
-Recommendation Module
-
----
-
-### Meaning
-
-The system produced actionable guidance.
-
 ---
-
-### Payload
 
+## 1️⃣6️⃣ Event Ownership Map
 
-recommendationId
+| 📢 Event | 📤 Publisher | 📥 Consumers |
+|---|---|---|
+| `UserRegistered` | Identity | Consumer, Notification |
+| `EnergyConsumerRegistered` | Consumer | Profiles, Notification |
+| `OrganizationProfileCreated` | Organization | Site, Analytics |
+| `HouseholdProfileCreated` | Household | Site, Analytics |
+| `SiteCreated` | Site | Asset, Analytics |
+| `EnergyAssetRegistered` | Asset | Operations, Fuel, Maintenance |
+| `EnergyOperationRecorded` | Operations | Analytics, Fuel |
+| `FuelConsumed` | Fuel | Analytics, Recommendation |
+| `MaintenanceCompleted` | Maintenance | Analytics |
+| `AlertTriggered` | Monitoring | Notification |
+| `RecommendationGenerated` | Recommendation | Notification |
 
-consumerId
-
-category
-
-priority
-
-
 ---
 
-### Consumers
+## 1️⃣7️⃣ Event Evolution Strategy
 
-- Notification Module
-- User Interface
-
----
+> 📜 Events are **contracts**. Changes must be **backward compatible**.
 
-# 16. Event Ownership Map
-
-| Event | Publisher | Consumers |
-|-|-|-|
-| UserRegistered | Identity | Consumer, Notification |
-| EnergyConsumerRegistered | Consumer | Profiles, Notification |
-| OrganizationProfileCreated | Organization | Site, Analytics |
-| HouseholdProfileCreated | Household | Site, Analytics |
-| SiteCreated | Site | Asset, Analytics |
-| EnergyAssetRegistered | Asset | Operations, Fuel, Maintenance |
-| EnergyOperationRecorded | Operations | Analytics, Fuel |
-| FuelConsumed | Fuel | Analytics, Recommendation |
-| MaintenanceCompleted | Maintenance | Analytics |
-| AlertTriggered | Monitoring | Notification |
-| RecommendationGenerated | Recommendation | Notification |
+**Breaking changes require:** 🆕 New event version · 🔄 Migration strategy · 🔧 Consumer updates
 
 ---
 
-# 17. Event Evolution Strategy
-
-Events are contracts.
-
-Changes must be backward compatible.
-
-Breaking changes require:
-
-- New event version
-- Migration strategy
-- Consumer updates
-
----
+## 🏁 Final Event Decision
 
-# Final Event Decision
+<div align="center">
 
-PowerPulse uses domain events to preserve module independence.
+> ### *PowerPulse uses domain events to preserve module independence.*
+> ### *Events describe business reality.*
 
-Events describe business reality.
+**They allow PowerPulse to evolve from a modular monolith into a distributed energy intelligence platform when required. 📡🌐**
 
-They allow PowerPulse to evolve from a modular monolith into a distributed energy intelligence platform when required.
+</div>
