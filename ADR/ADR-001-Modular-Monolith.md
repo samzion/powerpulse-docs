@@ -1,194 +1,404 @@
-<div align="center">
+# ADR-001: Modular Monolith Architecture
 
-# 🏛️ ADR-001: Adopt Modular Monolith Architecture
+## Status
 
-![Status](https://img.shields.io/badge/status-Accepted-success?style=for-the-badge)
-![Date](https://img.shields.io/badge/date-2026--07--20-blue?style=for-the-badge)
-![Owner](https://img.shields.io/badge/owner-PowerPulse%20Engineering-orange?style=for-the-badge)
+Accepted
 
-</div>
+## Date
 
----
-
-## 📋 Status
-
-✅ **Accepted**
-
-## 📅 Date
-
-`2026-07-20`
-
-## 👥 Decision Owners
-
-PowerPulse Engineering
+2026-07-20
 
 ---
 
-## 🧭 Context
+# Context
 
-PowerPulse is being built as an energy intelligence platform intended to serve Nigerian businesses and eventually African energy ecosystems.
+PowerPulse requires a software architecture capable of supporting:
 
-**The platform will eventually contain multiple business capabilities:**
+- Rapid MVP development
+- Strong domain boundaries
+- Independent business capabilities
+- Future growth into distributed systems
 
-`🪪 Identity` · `🏢 Organization` · `📍 Sites` · `🔋 Energy assets` · `⚙️ Energy operations` · `⛽ Fuel management` · `🔧 Maintenance` · `📡 Monitoring` · `📊 Analytics` · `💬 Recommendations` · `🎯 Optimization`
+The system must avoid two common failures:
 
-A natural evolution path could lead toward multiple independent services. However, beginning immediately with **microservices** introduces significant complexity:
-
-- 🌐 Network communication
-- 🚀 Service deployment management
-- 🔀 Distributed transactions
-- 🛠️ Operational overhead
-- 💰 Infrastructure cost
-- 🐛 Increased debugging complexity
-
-> 🎯 At the current stage, the primary challenge is **not** scaling infrastructure. The primary challenge is **building the correct domain model and reliable operational foundation.**
+1. A tightly coupled monolith that becomes difficult to change.
+2. Premature microservices that introduce operational complexity before scale requires them.
 
 ---
 
-## ⚖️ Decision
+# Decision
 
-<div align="center">
+PowerPulse will be built as a:
 
-> ### 🏛️ *PowerPulse will begin as a Modular Monolith implemented using Spring Modulith.*
+# Modular Monolith
 
-</div>
+using:
 
-The application will be deployed as **one executable system** while maintaining strict internal module boundaries. Each business capability will exist as an independent module.
-
----
-
-## 🏗️ Architecture Model
-
-```
-📦 com.powerpulse
- ├── 🔗 shared
- ├── 🪪 identity
- ├── 🏢 organization
- ├── 📍 site
- ├── 🔋 asset
- ├── ⚙️ operations
- ├── ⛽ fuel
- ├── 🔧 maintenance
- ├── 📡 monitoring
- ├── 📊 analytics
- └── 💬 recommendation
-```
-
-**Each module contains:**
-
-```
-📁 module
- ├── 🧠 domain
- ├── 🧵 application
- ├── 🗄️ infrastructure
- └── 🖥️ presentation
-```
+- Java
+- Spring Boot
+- Spring Modulith
+- PostgreSQL
+- Liquibase
 
 ---
 
-## 💡 Why This Decision
+# Why Modular Monolith
 
-### 1️⃣ Domain Clarity Before Distribution
+A modular monolith provides:
 
-The biggest unknown is not technical scaling — **it's whether the domain boundaries are correct.** A modular monolith allows PowerPulse to discover and refine boundaries before committing to distributed architecture.
+## Strong boundaries
 
-### 2️⃣ Lower Operational Complexity
+Each business capability owns:
 
-| 🐙 Microservices Require | 🏛️ Modular Monolith Gives |
-|---|---|
-| Multiple deployments | One deployable unit |
-| Service discovery | Direct module calls |
-| Distributed logging | Unified logging |
-| Network reliability management | No network hops |
-| Multiple databases/schemas | Simpler data layer |
-| More DevOps overhead | Faster iteration |
-
-### 3️⃣ Better Development Velocity
-
-Early PowerPulse development requires: 🔄 rapid domain refinement · ✏️ frequent model changes · 🔁 strong feedback loops — a modular monolith supports this better.
-
-### 4️⃣ Easier Future Evolution
-
-A well-designed modular monolith creates **natural extraction points**.
-
-```
-📊 Analytics Module  →  🚀 Analytics Service
-```
-
-> 🧩 The boundary already exists.
+- Domain logic
+- Data ownership
+- Application services
+- Internal models
 
 ---
 
-## ✅ Consequences — Positive
+## Simple deployment
 
-| ✨ Benefit | Detail |
-|---|---|
-| 🎯 **Clear Business Ownership** | Each module owns its domain — Fuel owns fuel rules, Operations owns energy events, Analytics only consumes operational truth |
-| 🧪 **Easier Testing** | Modules can be tested independently; domain tests remain fast and isolated |
-| 📉 **Reduced Infrastructure Burden** | Team focuses on domain correctness, user value, and data quality — not distributed system management |
-| 🛡️ **Stronger Architecture Discipline** | The application behaves like multiple systems internally, without the operational cost |
+Initially:
 
----
 
-## ⚠️ Consequences — Negative
+One application
 
-| 🚨 Risk | Mitigation |
-|---|---|
-| 🔗 **Single Deployment Unit** — a failure in one area may affect the whole application | Strong module boundaries · monitoring · good testing |
-| 🚧 **Future Extraction Requires Discipline** — moving modules into services later requires stable contracts, event-based communication, clear ownership | Follow module dependency rules from the beginning |
+One deployment
+
+One database instance
+
 
 ---
 
-## 🔀 Alternatives Considered
+## Future extraction capability
 
-### ❌ Alternative 1: Microservices From Day One
+Modules can later become services if required.
 
-**Rejected because:** 🛠️ too much operational complexity · ❓ domain boundaries not yet proven · 🐌 slower development · 💰 higher infrastructure cost
+Example:
 
-### ❌ Alternative 2: Traditional Layered Monolith
+Today:
 
-```
-🎛️ controller → 🧵 service → 🗄️ repository → 📦 entity
-```
 
-**Rejected because:** 🧱 weak business boundaries · 🔗 easy coupling · 💧 business logic tends to leak into services · ⚖️ poor alignment with PowerPulse vision
+powerpulse application
 
-### ❌ Alternative 3: Serverless Architecture
+|
+|
 
-**Rejected because:** 🚫 not suitable for core domain modelling · 🎛️ less control over domain boundaries · 🌊 operational behaviour is still evolving
+fuel module
 
----
 
-## 📏 Implementation Rules
+Future:
 
-| # | Rule |
-|---|---|
-| 1️⃣ | Modules communicate through **public APIs** and **domain events** — not direct internal access |
-| 2️⃣ | A module owns its **database tables** |
-| 3️⃣ | **No cross-module foreign keys** — use UUID references |
-| 4️⃣ | Domain logic must remain **independent of Spring and infrastructure** |
+
+Fuel Intelligence Service
+
 
 ---
 
-## 🔮 Future Migration Path
+# Module Structure
 
-If scale requires separation:
+The system is organized around bounded contexts.
 
-| Current | Future |
-|---|---|
-| `PowerPulse Application` └── 📊 Analytics Module | `PowerPulse Core` + 🚀 `Analytics Service` |
 
-> 🧩 The modular boundary becomes the service boundary.
+com.powerpulse
+
+├── identity
+
+├── consumer
+
+├── organization
+
+├── household
+
+├── site
+
+├── asset
+
+├── operations
+
+├── fuel
+
+├── maintenance
+
+├── monitoring
+
+├── analytics
+
+├── recommendation
+
+└── notification
+
 
 ---
 
-## 🏁 Final Decision Statement
+# Module Responsibilities
 
-<div align="center">
+## Identity
 
-> ### *PowerPulse will not optimize prematurely for distributed scale.*
-> ### *It will first optimize for correct domain modelling, reliable data, strong business boundaries, and sustainable engineering.*
+Authentication and authorization.
 
-**A strong modular foundation today creates the option for distributed architecture tomorrow. 🏛️➡️🚀**
+---
 
-</div>
+## Consumer
+
+Energy consumer lifecycle.
+
+Examples:
+
+- Business consumer
+- Household consumer
+
+---
+
+## Organization
+
+Business-specific information.
+
+---
+
+## Household
+
+Residential-specific information.
+
+---
+
+## Site
+
+Physical energy locations.
+
+---
+
+## Asset
+
+Energy equipment.
+
+---
+
+## Operations
+
+Energy behaviour and measurements.
+
+---
+
+## Fuel
+
+Fuel intelligence.
+
+---
+
+## Maintenance
+
+Asset health.
+
+---
+
+## Monitoring
+
+Operational observation.
+
+---
+
+## Analytics
+
+Data transformation into knowledge.
+
+---
+
+## Recommendation
+
+Decision support.
+
+---
+
+## Notification
+
+Communication delivery.
+
+---
+
+# Dependency Rules
+
+Modules communicate through:
+
+## Domain Events
+
+Preferred for:
+
+- State changes
+- Notifications
+- Asynchronous reactions
+
+Example:
+
+
+EnergyAssetRegistered
+
+    ↓
+
+Fuel module creates tracking
+
+
+---
+
+## Explicit Contracts
+
+Used when immediate response is required.
+
+Example:
+
+
+AssetApplicationService
+
+    ↓
+
+SiteExistenceChecker
+
+
+---
+
+# Forbidden Practices
+
+The following are prohibited:
+
+## Cross-module database access
+
+Invalid:
+
+
+Fuel module querying asset tables directly
+
+
+---
+
+## Shared domain models
+
+Invalid:
+
+
+Asset importing Site entity
+
+
+---
+
+## Circular dependencies
+
+Invalid:
+
+
+Site → Asset
+
+Asset → Site
+
+
+---
+
+# Package Boundary Rules
+
+Spring Modulith will enforce:
+
+
+module.api
+
+module.application
+
+module.domain
+
+module.infrastructure
+
+
+Each module controls its internal implementation.
+
+---
+
+# Database Ownership
+
+Each module owns its tables.
+
+Example:
+
+Consumer module:
+
+
+energy_consumers
+
+
+Asset module:
+
+
+energy_assets
+
+
+Site module:
+
+
+sites
+
+
+Cross-module relationships use:
+
+
+UUID references
+
+
+not database foreign keys.
+
+---
+
+# Consequences
+
+## Positive
+
+- Clear business ownership
+- Easier testing
+- Easier maintenance
+- Future extraction path
+- Better alignment with DDD
+
+---
+
+## Negative
+
+- More initial structure
+- Requires discipline
+- Developers must respect boundaries
+
+---
+
+# Alternatives Considered
+
+## Traditional Layered Monolith
+
+Rejected.
+
+Reason:
+
+Business boundaries become mixed.
+
+---
+
+## Microservices From Day One
+
+Rejected.
+
+Reason:
+
+Operational complexity exceeds current needs.
+
+---
+
+# Final Decision
+
+PowerPulse will begin as a modular monolith.
+
+The architecture prioritizes:
+
+
+Domain clarity
+
+over
+
+deployment complexity
+
+
+The system is designed to evolve from a single application into an energy intelligence platform.
