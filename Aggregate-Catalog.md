@@ -1,286 +1,875 @@
-<div align="center">
+# PowerPulse Aggregate Catalog
 
-# 🧱 PowerPulse Aggregate Catalog
+## Version 2.0
 
-### *The consistency boundaries of the PowerPulse domain model*
-
-![Aggregates](https://img.shields.io/badge/document-aggregate%20catalog-9b59b6?style=for-the-badge)
-![Count](https://img.shields.io/badge/aggregates-9-orange?style=for-the-badge)
-![DDD](https://img.shields.io/badge/methodology-DDD-blue?style=for-the-badge)
-
-</div>
+## Aggregate Design After Energy Consumer Abstraction
 
 ---
 
-## 🎯 Purpose
+# 1. Purpose
 
-This document defines the **aggregate boundaries** within PowerPulse. Aggregates are the primary consistency boundaries of the domain model.
+This document defines the aggregate boundaries inside PowerPulse.
 
-**An aggregate:**
+Aggregates represent:
 
-- 🏠 Owns related domain objects
-- ⚖️ Protects business invariants
-- 🔒 Controls state changes
-- 🔲 Defines transactional boundaries
-- 📢 Publishes domain events when meaningful changes occur
+- Business consistency boundaries
+- Domain ownership boundaries
+- Behaviour protection boundaries
 
-> 🚫 Aggregates are **not** database tables. **They represent business concepts.**
+An aggregate is not a database grouping.
 
----
-
-## 🧭 Aggregate Design Principles
-
-### Rule 1 — Aggregate Roots Control Access
-
-External modules communicate with aggregates **through the aggregate root**. Internal entities are not directly modified by external code.
-
-### Rule 2 — Aggregates Protect Invariants
-
-Business rules must be enforced inside the aggregate.
-
-| ❌ Wrong | ✅ Correct |
-|---|---|
-| `organization.setVerified(true);` | `organization.verify();` |
-
-> ⚖️ The aggregate decides whether verification is allowed.
-
-### Rule 3 — Aggregates Should Remain Small
-
-Large aggregates create: 🔒 locking problems · 🧵 complex transactions · 🧪 difficult testing
-
-> 🚫 PowerPulse avoids modelling the entire energy ecosystem as one aggregate.
-
-### Rule 4 — Cross-Aggregate Communication Uses IDs and Events
-
-Aggregates do not contain references to other aggregate objects.
-
-| ✅ Correct | ❌ Incorrect |
-|---|---|
-| `EnergyAsset { siteId: UUID }` | `EnergyAsset { Site site; }` |
+An aggregate exists to protect business rules.
 
 ---
 
-## 1️⃣ 🏢 Organization Aggregate
+# 2. Aggregate Design Principles
 
-**Bounded Context:** Organization · **Purpose:** Represents a business entity using PowerPulse *(bakery, hotel, retail company)*
+PowerPulse follows these rules:
 
-| 🧩 Field | Detail |
-|---|---|
-| **Aggregate Root** | `Organization` |
-| **Entities** | Organization |
-| **Value Objects** | OrganizationName · Address · VerificationCredential |
-| **Attributes** | id · name · status · createdAt · updatedAt |
-| **Possible States** | 🟡 `PENDING_VERIFICATION` · 🟢 `ACTIVE` · 🔴 `SUSPENDED` |
-| **Commands** | RegisterOrganization · VerifyOrganization · SuspendOrganization |
-| **Domain Events** | `OrganizationRegistered` · `OrganizationVerified` · `OrganizationSuspended` |
+## Rule 1
 
-**⚖️ Invariants**
-- Organization must have a valid name
-- Organization identity must be unique
-- Verification status transitions must be controlled
-- Suspended organizations cannot perform restricted operations
+Every aggregate has exactly one aggregate root.
 
 ---
 
-## 2️⃣ 📍 Site Aggregate
+## Rule 2
 
-**Bounded Context:** Site · **Purpose:** Represents a physical location where energy is consumed
+External modules reference aggregates through:
 
-```
-🏢 Mama Ngozi Bakery
-  ├── 📍 Mushin Branch
-  └── 📍 Ikeja Branch
-```
-
-| 🧩 Field | Detail |
-|---|---|
-| **Aggregate Root** | `Site` |
-| **Entities** | Site |
-| **Value Objects** | SiteAddress · Location |
-| **Attributes** | id · organizationId · name · address · status · createdAt |
-| **Commands** | CreateSite · UpdateSiteDetails · DeactivateSite |
-| **Domain Events** | `SiteCreated` · `SiteUpdated` · `SiteDeactivated` |
-
-**⚖️ Invariants**
-- Site must belong to an organization
-- Site name cannot be empty
-- Site identifier must be unique within organization
-- Deactivated sites cannot receive new operations
+- IDs
+- Domain events
+- Explicit contracts
 
 ---
 
-## 3️⃣ 🔋 Energy Asset Aggregate
+## Rule 3
 
-**Bounded Context:** Energy Asset · **Purpose:** Represents physical equipment for energy production or storage
-
-| 🧩 Field | Detail |
-|---|---|
-| **Aggregate Root** | `EnergyAsset` |
-| **Entities** | EnergyAsset |
-| **Value Objects** | AssetSpecification · Capacity · ManufacturerDetails |
-| **Attributes** | id · siteId · assetType · name · capacity · status · installedAt |
-| **Asset Types** | ⚡ `GENERATOR` · 🔌 `INVERTER` · 🔋 `BATTERY` · ☀️ `SOLAR` |
-| **Commands** | RegisterEnergyAsset · UpdateAssetSpecification · RetireAsset |
-| **Domain Events** | `EnergyAssetRegistered` · `EnergyAssetUpdated` · `EnergyAssetRetired` |
-
-**⚖️ Invariants**
-- Asset must belong to a site
-- Asset type must be valid
-- Retired assets cannot generate operations
-- Capacity must be positive
+Aggregates protect their own invariants.
 
 ---
 
-## 4️⃣ ⚙️ Energy Operation Aggregate
+## Rule 4
 
-**Bounded Context:** Energy Operations · **Purpose:** Represents actual energy usage behaviour — *the beginning of operational intelligence*
+Large aggregates are avoided.
 
-| 🧩 Field | Detail |
-|---|---|
-| **Aggregate Root** | `EnergyOperation` |
-| **Entities** | EnergyOperation |
-| **Value Objects** | EnergyMeasurement · RuntimeDuration · EnergyCost |
-| **Attributes** | id · assetId · operationType · startTime · endTime · energyConsumed · cost |
-| **Operation Types** | `GENERATION` · `CONSUMPTION` · `GRID_AVAILABILITY` · `BATTERY_DISCHARGE` |
-| **Commands** | RecordEnergyUsage · CloseOperation · CalculateOperationCost |
-| **Domain Events** | `EnergyUsageRecorded` · `EnergyOperationCompleted` |
-
-**⚖️ Invariants**
-- Energy values cannot be negative
-- End time cannot be before start time
-- Operations must reference valid assets
-- Historical operations cannot be silently changed
+A single aggregate should not own unrelated business concepts.
 
 ---
 
-## 5️⃣ ⛽ Fuel Inventory Aggregate
+# 3. Aggregate Overview
 
-**Bounded Context:** Fuel · **Purpose:** Tracks fuel availability and consumption
+PowerPulse aggregates:
 
-| 🧩 Field | Detail |
-|---|---|
-| **Aggregate Root** | `FuelInventory` |
-| **Entities** | FuelInventory · FuelTransaction |
-| **Value Objects** | FuelQuantity · Money · FuelType |
-| **Attributes** | id · assetId · currentQuantity · fuelType |
-| **Commands** | AddFuel · ConsumeFuel · AdjustFuelInventory |
-| **Domain Events** | `FuelAdded` · `FuelConsumed` · `FuelAdjusted` |
 
-**⚖️ Invariants**
-- Fuel quantity cannot be negative
-- Consumption cannot exceed available inventory
-- Fuel transactions cannot modify historical records
+EnergyConsumer
 
----
+OrganizationProfile
 
-## 6️⃣ 🔧 Maintenance Aggregate
+HouseholdProfile
 
-**Bounded Context:** Maintenance · **Purpose:** Tracks equipment reliability and servicing
+Site
 
-| 🧩 Field | Detail |
-|---|---|
-| **Aggregate Root** | `MaintenanceRecord` |
-| **Entities** | MaintenanceRecord |
-| **Value Objects** | MaintenanceType · MaintenanceCost |
-| **Commands** | ScheduleMaintenance · CompleteMaintenance |
-| **Domain Events** | `MaintenanceScheduled` · `MaintenanceCompleted` |
+EnergyAsset
 
-**⚖️ Invariants**
-- Maintenance belongs to an asset
-- Completion requires a valid schedule
-- Maintenance history is immutable
+EnergyOperation
+
+FuelInventory
+
+MaintenanceRecord
+
+MonitoringAlert
+
+Recommendation
+
 
 ---
 
-## 7️⃣ 📡 Monitoring Aggregate
+# 4. EnergyConsumer Aggregate
 
-**Bounded Context:** Monitoring · **Purpose:** Detect operational conditions requiring attention
+## Aggregate Root
 
-| 🧩 Field | Detail |
-|---|---|
-| **Aggregate Root** | `Alert` |
-| **Entities** | Alert |
-| **Value Objects** | AlertCondition · Severity |
-| **Commands** | CreateAlert · ResolveAlert |
-| **Domain Events** | `AlertCreated` · `AlertResolved` |
 
-**⚖️ Invariants**
-- Alert must have a reason
-- Resolved alerts cannot be modified
+EnergyConsumer
+
+
+## Context
+
+Consumer Context
 
 ---
 
-## 8️⃣ 📊 Analytics Aggregate
+## Purpose
 
-**Bounded Context:** Analytics · **Purpose:** Transforms operational facts into business understanding
+Represents any entity that consumes or manages energy.
 
-| 🧩 Field | Detail |
-|---|---|
-| **Aggregate Root** | `EnergyReport` |
-| **Entities** | EnergyReport |
-| **Value Objects** | ReportPeriod · CostSummary · ConsumptionSummary |
-| **Commands** | GenerateEnergyReport |
-| **Domain Events** | `EnergyReportGenerated` |
+Examples:
 
-**⚖️ Invariants**
-- Analytics cannot modify operational records
-- Reports must reference valid periods
-- Calculations must be reproducible
+- Business
+- Household
+- Institution
+- Community
 
 ---
 
-## 9️⃣ 💬 Recommendation Aggregate
+## Responsibilities
 
-**Bounded Context:** Recommendation · **Purpose:** Produces actionable energy improvement suggestions
+Owns:
 
-| 🧩 Field | Detail |
-|---|---|
-| **Aggregate Root** | `Recommendation` |
-| **Value Objects** | RecommendationType · RecommendationPriority |
-| **Commands** | GenerateRecommendation · DismissRecommendation · AcceptRecommendation |
-| **Domain Events** | `RecommendationGenerated` · `RecommendationAccepted` |
-
-**⚖️ Invariants**
-- Recommendations must be based on known facts
-- Recommendations must explain their reasoning
-- Recommendations cannot alter source data
+- Consumer identity
+- Consumer type
+- Consumer lifecycle
+- Consumer status
 
 ---
 
-## 🗺️ Aggregate Relationship Overview
+## Attributes
 
-```
-🏢 Organization
-  └── 📍 Site
-        └── 🔋 Energy Asset
-              ├── ⚙️ Energy Operation
-              ├── ⛽ Fuel Inventory
-              └── 🔧 Maintenance
-```
 
----
+id UUID
 
-## 🏗️ Aggregate Implementation Rule
+consumerType
 
-When implementing PowerPulse, build in this order:
+status
 
-1. 🏢 Start with **Organization**
-2. 📍 Add **Site**
-3. 🔋 Add **Energy Asset**
-4. ⚙️ Add **Operations**
-5. ✨ Add supporting capabilities
+createdAt
 
-> 🚫 Do **not** implement analytics or recommendations before operational aggregates exist.
->
-> 💡 The quality of intelligence depends on the quality of the aggregates producing the data.
+updatedAt
+
 
 ---
 
-## 🏁 Final Principle
+## Consumer Types
 
-<div align="center">
+Initial:
 
-> ### *Aggregates are not created to mirror database tables.*
-> ### *They exist to protect the business reality PowerPulse represents.*
 
-</div>
+BUSINESS
+
+HOUSEHOLD
+
+
+Future:
+
+
+INSTITUTION
+
+COMMUNITY
+
+GOVERNMENT
+
+
+---
+
+## Invariants
+
+An EnergyConsumer:
+
+- must have a type
+- must have an active lifecycle state
+- cannot exist without identity
+
+---
+
+## Events Produced
+
+
+EnergyConsumerRegistered
+
+EnergyConsumerActivated
+
+EnergyConsumerSuspended
+
+
+---
+
+# 5. OrganizationProfile Aggregate
+
+## Aggregate Root
+
+
+OrganizationProfile
+
+
+## Context
+
+Organization Profile Context
+
+---
+
+## Purpose
+
+Represents business information belonging to a consumer.
+
+---
+
+## Relationship
+
+
+EnergyConsumer
+
+   |
+
+OrganizationProfile
+
+
+---
+
+## Responsibilities
+
+Owns:
+
+- Business name
+- Business category
+- Business classification
+- Registration details
+
+---
+
+## Attributes
+
+
+id UUID
+
+consumerId UUID
+
+businessName
+
+businessType
+
+registrationNumber
+
+
+---
+
+## Invariants
+
+An organization profile:
+
+- must belong to an EnergyConsumer
+- must have a business identity
+- must have a valid business type
+
+---
+
+## Events Produced
+
+
+OrganizationProfileCreated
+
+OrganizationProfileUpdated
+
+
+---
+
+# 6. HouseholdProfile Aggregate
+
+## Aggregate Root
+
+
+HouseholdProfile
+
+
+## Context
+
+Household Profile Context
+
+---
+
+## Purpose
+
+Represents residential consumers.
+
+---
+
+## Relationship
+
+
+EnergyConsumer
+
+   |
+
+HouseholdProfile
+
+
+---
+
+## Responsibilities
+
+Owns:
+
+- Household information
+- Residential details
+
+---
+
+## Attributes
+
+
+id UUID
+
+consumerId UUID
+
+householdName
+
+location
+
+occupancyInformation
+
+
+---
+
+## Events Produced
+
+
+HouseholdProfileCreated
+
+HouseholdProfileUpdated
+
+
+---
+
+# 7. Site Aggregate
+
+## Aggregate Root
+
+
+Site
+
+
+## Context
+
+Site Context
+
+---
+
+## Purpose
+
+Represents a physical location where energy activity occurs.
+
+Examples:
+
+- Shop
+- Factory
+- Home
+- Estate
+
+---
+
+## Relationship
+
+
+EnergyConsumer
+
+    |
+
+   Site
+
+---
+
+## Responsibilities
+
+Owns:
+
+- Location identity
+- Site status
+- Site information
+
+---
+
+## Attributes
+
+
+id UUID
+
+consumerId UUID
+
+name
+
+address
+
+status
+
+
+---
+
+## Invariants
+
+A Site:
+
+- must belong to a consumer
+- must have a valid status
+- cannot operate without identity
+
+---
+
+## Events Produced
+
+
+SiteCreated
+
+SiteActivated
+
+SiteDeactivated
+
+
+---
+
+# 8. EnergyAsset Aggregate
+
+## Aggregate Root
+
+
+EnergyAsset
+
+
+## Context
+
+Energy Asset Context
+
+---
+
+## Purpose
+
+Represents physical energy equipment.
+
+Examples:
+
+- Generator
+- Inverter
+- Solar system
+- Battery
+
+---
+
+## Relationship
+
+
+Site
+
+|
+
+EnergyAsset
+
+
+---
+
+## Responsibilities
+
+Owns:
+
+- Asset identity
+- Asset type
+- Asset lifecycle
+
+---
+
+## Attributes
+
+
+id UUID
+
+siteId UUID
+
+assetType
+
+status
+
+manufacturer
+
+model
+
+
+---
+
+## Asset Types
+
+
+GENERATOR
+
+INVERTER
+
+SOLAR
+
+BATTERY
+
+GRID_CONNECTION
+
+
+---
+
+## Invariants
+
+An asset:
+
+- must belong to a site
+- must have a valid type
+- must follow lifecycle transitions
+
+---
+
+## Events Produced
+
+
+EnergyAssetRegistered
+
+EnergyAssetActivated
+
+EnergyAssetRetired
+
+
+---
+
+# 9. EnergyOperation Aggregate
+
+## Aggregate Root
+
+
+EnergyOperation
+
+
+## Context
+
+Energy Operations
+
+---
+
+## Purpose
+
+Captures actual energy behaviour.
+
+---
+
+## Examples
+
+
+Generator ran for 6 hours
+
+Battery discharged
+
+Grid available
+
+
+---
+
+## Responsibilities
+
+Owns:
+
+- Runtime events
+- Consumption events
+- Operational measurements
+
+---
+
+## Attributes
+
+
+id UUID
+
+assetId UUID
+
+operationType
+
+startTime
+
+endTime
+
+energyConsumed
+
+
+---
+
+## Events Produced
+
+
+EnergyOperationRecorded
+
+
+---
+
+# 10. FuelInventory Aggregate
+
+## Aggregate Root
+
+
+FuelInventory
+
+
+## Context
+
+Fuel
+
+---
+
+## Purpose
+
+Tracks fuel availability and consumption.
+
+---
+
+## Relationship
+
+
+EnergyAsset
+
+   |
+
+FuelInventory
+
+
+---
+
+## Responsibilities
+
+Owns:
+
+- Fuel balance
+- Fuel transactions
+
+---
+
+## Attributes
+
+
+id UUID
+
+assetId UUID
+
+fuelType
+
+quantity
+
+
+---
+
+## Events Produced
+
+
+FuelAdded
+
+FuelConsumed
+
+FuelLevelLow
+
+
+---
+
+# 11. Maintenance Aggregate
+
+## Aggregate Root
+
+
+MaintenanceRecord
+
+
+## Context
+
+Maintenance
+
+---
+
+## Purpose
+
+Tracks equipment health activities.
+
+---
+
+## Responsibilities
+
+Owns:
+
+- Maintenance schedules
+- Repairs
+- Service history
+
+---
+
+## Attributes
+
+
+id UUID
+
+assetId UUID
+
+maintenanceType
+
+scheduledDate
+
+completedDate
+
+
+---
+
+## Events Produced
+
+
+MaintenanceScheduled
+
+MaintenanceCompleted
+
+
+---
+
+# 12. Monitoring Aggregate
+
+## Aggregate Root
+
+
+MonitoringAlert
+
+
+---
+
+## Purpose
+
+Represents abnormal conditions.
+
+Examples:
+
+- High fuel consumption
+- Equipment failure risk
+- Unexpected runtime
+
+---
+
+## Events Produced
+
+
+AlertTriggered
+
+AlertResolved
+
+
+---
+
+# 13. Recommendation Aggregate
+
+## Aggregate Root
+
+
+Recommendation
+
+
+---
+
+## Purpose
+
+Stores actionable intelligence.
+
+---
+
+## Examples
+
+
+Reduce generator runtime by 3 hours daily
+
+Service generator within 20 hours
+
+
+---
+
+## Events Produced
+
+
+RecommendationGenerated
+
+
+---
+
+# 14. Aggregate Relationship Map
+
+            EnergyConsumer
+
+                   |
+
+    +--------------+--------------+
+
+    |                             |
+
+OrganizationProfile HouseholdProfile
+
+                   |
+
+                  Site
+
+
+                   |
+
+             EnergyAsset
+
+
+                   |
+
+          EnergyOperation
+
+
+                   |
+
+      +------------+------------+
+
+      |                         |
+
+FuelInventory MaintenanceRecord
+
+                   |
+
+            Monitoring
+
+
+                   |
+
+         Recommendation
+
+---
+
+# 15. Cross Aggregate Communication
+
+Aggregates communicate through:
+
+## Domain Events
+
+Example:
+
+
+EnergyAssetRegistered
+
+    ↓
+
+Fuel module creates inventory tracking
+
+
+---
+
+## Explicit Contracts
+
+Example:
+
+
+AssetService
+
+    ↓
+
+SiteExistenceChecker
+
+
+---
+
+# 16. Database Ownership Rule
+
+Aggregates own their data.
+
+No aggregate directly manipulates another aggregate's tables.
+
+No cross-module foreign keys.
+
+References are UUID only.
+
+---
+
+# Final Aggregate Decision
+
+PowerPulse aggregates are designed around business capability, not database structure.
+
+EnergyConsumer is the foundation.
+
+All future intelligence depends on the correctness of these boundaries.
