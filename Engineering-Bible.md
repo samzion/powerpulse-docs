@@ -8,6 +8,7 @@
 ![Stack](https://img.shields.io/badge/Java-17-orange?style=for-the-badge&logo=openjdk&logoColor=white)
 ![Framework](https://img.shields.io/badge/Spring%20Boot-3.3.4-brightgreen?style=for-the-badge&logo=spring&logoColor=white)
 ![DB](https://img.shields.io/badge/PostgreSQL-16-blue?style=for-the-badge&logo=postgresql&logoColor=white)
+![Scope](https://img.shields.io/badge/scope-all%20energy%20consumers-blueviolet?style=for-the-badge)
 
 </div>
 
@@ -91,7 +92,9 @@ The backend follows Spring Modulith conventions.
 📦 com.powerpulse
  ├── 🔗 shared
  ├── 🪪 identity
- ├── 🏢 organization
+ ├── 🌐 consumer
+ ├── 🏢 organization-profile
+ ├── 🏠 household-profile
  ├── 📍 site
  ├── 🔋 asset
  ├── ⚙️ operations
@@ -101,6 +104,8 @@ The backend follows Spring Modulith conventions.
  ├── 📊 analytics
  └── 💬 recommendation
 ```
+
+> 🌐 `consumer` replaces the former `organization` root — see [ADR-004](./ADR-004-Energy-Consumer-Abstraction.md). `organization-profile` and `household-profile` are specializations owned behind the `EnergyConsumer` aggregate.
 
 **Each module owns:**
 
@@ -120,13 +125,16 @@ The backend follows Spring Modulith conventions.
 |---|---|
 | 🔗 **Shared** | Truly shared concepts only — domain events, common exceptions, UUID utilities, time abstraction, shared interfaces. ⚠️ **Must not contain business logic.** |
 | 🪪 **Identity** | Users · Authentication · Authorization. Does not know about energy concepts. |
-| 🏢 **Organization** | Organizations · Business ownership · Verification |
-| 📍 **Site** | Physical locations · Operational sites |
+| 🌐 **Consumer** | `EnergyConsumer` identity · consumer lifecycle · consumer type. The top-level customer concept — see ADR-004. |
+| 🏢 **Organization Profile** | Business information · business classification · verification. Specializes a Consumer. |
+| 🏠 **Household Profile** | Residential information · household characteristics. Specializes a Consumer. |
+| 📍 **Site** | Physical locations · operational sites, owned by a Consumer |
 | 🔋 **Asset** | Generators · Inverters · Batteries · Energy equipment |
 | ⚙️ **Operations** | Energy usage · Runtime · Measurements |
 | ⛽ **Fuel** | Fuel inventory · Fuel consumption · Fuel cost |
 | 🔧 **Maintenance** | Service records · Asset health |
 | 📊 **Analytics** | Reports · Trends · Aggregations. ⚠️ **Consumes facts — does not create operational truth.** |
+| 💬 **Recommendation** | Actionable improvement suggestions, derived from Analytics and Monitoring outputs |
 
 ---
 
@@ -166,7 +174,7 @@ The domain must **never** depend on:
 **Application services coordinate:**
 
 ```
-📥 RegisterOrganizationCommand
+📥 RegisterEnergyConsumerCommand
 
 Application Service:
   1. Receive command
@@ -188,7 +196,7 @@ Entities must:
 
 | ❌ Avoid | ✅ Prefer |
 |---|---|
-| `entity.setStatus(...)` | `organization.verify()` |
+| `entity.setStatus(...)` | `energyConsumer.verify()` |
 
 > 💬 Behaviour expresses business meaning.
 
@@ -202,6 +210,7 @@ Value objects are preferred for concepts with rules.
 |---|---|
 | `String fuelType` | `FuelType` |
 | `BigDecimal amount` | `Money` *(when behaviour exists)* |
+| `String consumerType` | `ConsumerType` |
 
 ---
 
@@ -213,9 +222,10 @@ Value objects are preferred for concepts with rules.
 
 | ✅ Allowed | 🚫 Not Allowed |
 |---|---|
+| `organization_profiles.consumer_id UUID` | `FOREIGN KEY(consumer_id) REFERENCES energy_consumers(id)` |
 | `energy_asset.site_id UUID` | `FOREIGN KEY(site_id) REFERENCES site(id)` |
 
-> 📞 Reason: Modules communicate through **contracts**, not database coupling.
+> 📞 Reason: Modules communicate through **contracts**, not database coupling. See [ADR-003](./ADR-003-Database-Ownership.md).
 
 ---
 
@@ -242,8 +252,9 @@ All entities use **UUID**.
 API boundaries use **DTOs**. Requests are Java records:
 
 ```java
-public record CreateOrganizationRequest(
-    String name
+public record RegisterEnergyConsumerRequest(
+    String name,
+    ConsumerType consumerType
 ) {}
 ```
 
@@ -256,7 +267,7 @@ public record CreateOrganizationRequest(
 All APIs are versioned: **`/api/v1/`**
 
 ```
-POST /api/v1/organizations
+POST /api/v1/energy-consumers
 ```
 
 **Controllers:**
@@ -275,7 +286,7 @@ Events represent **completed business facts**.
 
 | ✅ Good | ❌ Bad |
 |---|---|
-| `OrganizationRegistered` | `RegisterOrganizationCommandStarted` |
+| `EnergyConsumerRegistered` | `RegisterEnergyConsumerCommandStarted` |
 
 **Events are:** ⏳ Immutable · 📜 Past tense · 💬 Business meaningful
 
@@ -344,7 +355,9 @@ Use **structured logging**. Every important operation should provide:
       ↓
 🪪 Identity
       ↓
-🏢 Organization
+🌐 Energy Consumer
+      ↓
+🏢 Organization Profile
       ↓
 📍 Site
       ↓
@@ -362,6 +375,8 @@ Use **structured logging**. Every important operation should provide:
       ↓
 💬 Recommendation
 ```
+
+> 🏠 `Household Profile` follows the same sequence as `Organization Profile` whenever household support is scheduled — the boundary already exists, per ADR-004.
 
 ---
 
