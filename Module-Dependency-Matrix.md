@@ -1,261 +1,744 @@
-<div align="center">
+# PowerPulse Module Dependency Matrix
 
-# 🧭 PowerPulse Module Dependency Matrix
+## Version 2.0
 
-### *Dependency rules between PowerPulse bounded contexts*
-
-![Matrix](https://img.shields.io/badge/document-dependency%20matrix-16a085?style=for-the-badge)
-![Modules](https://img.shields.io/badge/modules-11-blue?style=for-the-badge)
-![Architecture](https://img.shields.io/badge/architecture-Spring%20Modulith-brightgreen?style=for-the-badge&logo=spring&logoColor=white)
-
-</div>
+## Module Boundaries After Energy Consumer Abstraction
 
 ---
 
-## 🎯 Purpose
+# 1. Purpose
 
-This document defines the dependency rules between PowerPulse bounded contexts. The purpose is to **prevent architectural drift** as the system grows.
+This document defines the dependency rules between PowerPulse modules.
 
-PowerPulse is designed as a **modular monolith** using Spring Modulith. Although all modules initially run inside one application, they must behave as independently owned business capabilities.
+The objective is to maintain:
 
-**A module:**
-- ⚖️ Owns its business rules
-- 🧠 Owns its internal models
-- 🗄️ Owns its persistence
-- 📞 Exposes only intentional contracts
-- 📢 Communicates through defined interfaces and domain events
+- Strong boundaries
+- Low coupling
+- Clear ownership
+- Future extraction readiness
 
----
-
-## 🏛️ Architectural Principle
-
-The dependency direction follows business ownership. The system should evolve from:
-
-```
-🏗️ Foundation
-    └── ⚡ Operational Reality
-          └── 🔍 Understanding
-                └── 💬 Intelligence
-```
-
-> 🔼 Modules lower in the stack provide capabilities to modules above them.
+A module may depend only on modules below it in the dependency direction.
 
 ---
 
-## 🗂️ Module Overview
+# 2. Core Dependency Principle
 
-```
-📦 shared · 🪪 identity · 🏢 organization · 📍 site · 🔋 asset
-⚙️ operations · ⛽ fuel · 🔧 maintenance · 📡 monitoring
-📊 analytics · 💬 recommendation
-```
+PowerPulse follows:
 
----
+> Dependencies point toward stable business foundations.
 
-## 📐 Dependency Rules
+The flow is:
 
-### 🔗 Shared Module
 
-**Responsibility:** Concepts genuinely shared across the system — domain event base contracts, common exceptions, UUID utilities, time abstraction, shared primitives.
+Identity
 
-| | |
-|---|---|
-| **Depends On** | `NONE` |
-| **Used By** | `ALL MODULES` |
+↓
 
-> 🚫 **Restrictions:** The shared module must never contain business entities, domain rules, module-specific services, or database models. **It is not a dumping ground.**
+Consumer
 
----
+↓
 
-### 🪪 Identity Module
+Profiles
 
-**Responsibility:** Authentication and user identity.
+↓
 
-| | |
-|---|---|
-| **Depends On** | `shared` |
-| **Used By** | `organization` · *(future: billing, notification, access-control)* |
+Site
 
-> 🚫 **Does not know:** Organizations · Sites · Energy assets · Operations
+↓
 
----
+Energy Asset
 
-### 🏢 Organization Module
+↓
 
-**Responsibility:** Business ownership and company identity.
+Energy Operations
 
-| | |
-|---|---|
-| **Depends On** | `shared` · `identity` |
-| **Used By** | `site` · *(future: billing, analytics)* |
-| **Publishes** | 📢 `OrganizationRegistered` · `OrganizationVerified` · `OrganizationSuspended` |
+↓
 
----
+Fuel / Maintenance / Monitoring
 
-### 📍 Site Module
+↓
 
-**Responsibility:** Physical operating locations.
+Analytics
 
-| | |
-|---|---|
-| **Depends On** | `shared` · `organization` |
-| **Used By** | `asset` |
-| **Consumes** | 📥 `OrganizationRegistered` |
-| **Publishes** | 📢 `SiteCreated` · `SiteUpdated` |
+↓
+
+Recommendation
+
+↓
+
+Notification
+
 
 ---
 
-### 🔋 Energy Asset Module
+# 3. Module Overview
 
-**Responsibility:** Physical energy equipment *(generator, inverter, battery, solar)*.
-
-| | |
-|---|---|
-| **Depends On** | `shared` · `site` |
-| **Used By** | `operations` · `fuel` · `maintenance` · `monitoring` |
-| **Consumes** | 📥 `SiteCreated` |
-| **Publishes** | 📢 `EnergyAssetRegistered` · `EnergyAssetUpdated` · `EnergyAssetRetired` |
-
----
-
-### ⚙️ Energy Operations Module
-
-**Responsibility:** Energy usage behaviour.
-
-| | |
-|---|---|
-| **Depends On** | `shared` · `asset` |
-| **Used By** | `analytics` · `fuel` · `monitoring` · `recommendation` |
-| **Consumes** | 📥 `EnergyAssetRegistered` |
-| **Publishes** | 📢 `EnergyUsageRecorded` · `EnergyOperationCompleted` |
+| Module | Responsibility |
+|-|-|
+| Identity | User authentication and authorization |
+| Consumer | Energy consumer lifecycle |
+| Organization Profile | Business information |
+| Household Profile | Residential information |
+| Site | Physical locations |
+| Asset | Energy equipment |
+| Operations | Energy behaviour records |
+| Fuel | Fuel intelligence |
+| Maintenance | Equipment health |
+| Monitoring | Alerts and observations |
+| Analytics | Reports and insights |
+| Recommendation | Decision support |
+| Notification | User communication |
 
 ---
 
-### ⛽ Fuel Module
+# 4. Identity Module
 
-**Responsibility:** Fuel economics and inventory.
+## Owns
 
-| | |
-|---|---|
-| **Depends On** | `shared` · `asset` · `operations` |
-| **Used By** | `analytics` · `recommendation` |
-| **Consumes** | 📥 `EnergyUsageRecorded` |
-| **Publishes** | 📢 `FuelAdded` · `FuelConsumed` |
 
----
+users
 
-### 🔧 Maintenance Module
+credentials
 
-**Responsibility:** Asset reliability.
+authentication
 
-| | |
-|---|---|
-| **Depends On** | `shared` · `asset` |
-| **Used By** | `analytics` · `monitoring` |
-| **Consumes** | 📥 `EnergyAssetRegistered` · `EnergyAssetRetired` |
-| **Publishes** | 📢 `MaintenanceScheduled` · `MaintenanceCompleted` |
 
 ---
 
-### 📡 Monitoring Module
+## Depends On
 
-**Responsibility:** Operational awareness.
+None.
 
-| | |
-|---|---|
-| **Depends On** | `shared` · `asset` · `operations` · `maintenance` |
-| **Used By** | `recommendation` |
-| **Consumes** | 📥 `EnergyUsageRecorded` · `EnergyAssetRegistered` · `MaintenanceCompleted` |
-| **Publishes** | 📢 `AlertCreated` · `AlertResolved` |
+Identity is foundational.
 
 ---
 
-### 📊 Analytics Module
+## Publishes
 
-**Responsibility:** Business intelligence and reporting.
 
-| | |
-|---|---|
-| **Depends On** | `shared` · `operations` · `fuel` · `maintenance` |
-| **Consumes** | 📥 `EnergyUsageRecorded` · `EnergyOperationCompleted` · `FuelConsumed` · `MaintenanceCompleted` |
-| **Publishes** | 📢 `EnergyReportGenerated` |
+UserRegistered
 
-> 🚫 **Does not own:** Energy records · Fuel records · Maintenance records — **it only interprets them.**
 
 ---
 
-### 💬 Recommendation Module
+## Consumed By
 
-**Responsibility:** Actionable energy improvement suggestions.
-
-| | |
-|---|---|
-| **Depends On** | `shared` · `analytics` · `monitoring` |
-| **Consumes** | 📥 `EnergyReportGenerated` · `AlertCreated` |
-| **Publishes** | 📢 `RecommendationGenerated` · `RecommendationAccepted` |
-
-> 🚫 **Does not calculate** operational truth — it consumes reports, metrics, and alerts.
+- Consumer Module
+- Notification Module
 
 ---
 
-## 📊 Dependency Matrix
+# 5. Consumer Module
 
-**Legend:** ✅ = Allowed dependency · 🚫 = Forbidden dependency · 📢 = Event communication
+## Owns
 
-| Module | Shared | Identity | Org | Site | Asset | Ops | Fuel | Maint | Monitor | Analytics | Rec. |
-|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **Shared** | – | 🚫 | 🚫 | 🚫 | 🚫 | 🚫 | 🚫 | 🚫 | 🚫 | 🚫 | 🚫 |
-| **Identity** | ✅ | – | 🚫 | 🚫 | 🚫 | 🚫 | 🚫 | 🚫 | 🚫 | 🚫 | 🚫 |
-| **Organization** | ✅ | ✅ | – | 📢 | 🚫 | 🚫 | 🚫 | 🚫 | 🚫 | 📢 | 🚫 |
-| **Site** | ✅ | 🚫 | ✅ | – | 📢 | 🚫 | 🚫 | 🚫 | 🚫 | 🚫 | 🚫 |
-| **Asset** | ✅ | 🚫 | 🚫 | ✅ | – | 📢 | 📢 | 📢 | 📢 | 🚫 | 🚫 |
-| **Operations** | ✅ | 🚫 | 🚫 | 🚫 | ✅ | – | 📢 | 🚫 | 📢 | 📢 | 📢 |
-| **Fuel** | ✅ | 🚫 | 🚫 | 🚫 | ✅ | ✅ | – | 🚫 | 🚫 | 📢 | 📢 |
-| **Maintenance** | ✅ | 🚫 | 🚫 | 🚫 | ✅ | 🚫 | 🚫 | – | 📢 | 📢 | 🚫 |
-| **Monitoring** | ✅ | 🚫 | 🚫 | 🚫 | ✅ | ✅ | 🚫 | ✅ | – | 🚫 | 📢 |
-| **Analytics** | ✅ | 🚫 | 📢 | 🚫 | 🚫 | ✅ | ✅ | ✅ | 🚫 | – | 📢 |
-| **Recommendation** | ✅ | 🚫 | 🚫 | 🚫 | 🚫 | 📢 | 📢 | 📢 | ✅ | ✅ | – |
+
+energy_consumers
+
 
 ---
 
-## 🚫 Forbidden Dependencies
+## Responsibility
 
-The following are **architectural violations**.
+Creates and manages energy consumers.
 
-| ⚠️ Violation | Example | Reason |
-|---|---|---|
-| **Domain depending on infrastructure** | `domain → JPA repository` | Domain must stay pure |
-| **Analytics owning operational data** | `analytics.energy_usage_table` | Analytics consumes facts, doesn't own them |
-| **Recommendation directly querying assets** | `recommendation → asset database` | Recommendation consumes analytics/monitoring outputs only |
-| **Cross-module database foreign keys** | `asset.site_id FK → site.id` | Use `asset.site_id UUID` instead — relationships are managed through business contracts |
+Examples:
 
----
 
-## 🏗️ Implementation Order
+Business
 
-```
-📦 shared
-   └── 🪪 identity
-         └── 🏢 organization
-               └── 📍 site
-                     └── 🔋 asset
-                           └── ⚙️ operations
-                                 └── ⛽ fuel
-                                       └── 🔧 maintenance
-                                             └── 📡 monitoring
-                                                   └── 📊 analytics
-                                                         └── 💬 recommendation
-```
+Household
+
 
 ---
 
-## 🏁 Final Principle
+## Depends On
 
-<div align="center">
 
-> ### *PowerPulse grows through controlled evolution.*
-> ### *Strong module boundaries today create the flexibility required for tomorrow's intelligence.*
+Identity
 
-**The architecture must protect the domain, not the other way around. 🛡️**
 
-</div>
+---
+
+## Publishes
+
+
+EnergyConsumerRegistered
+
+EnergyConsumerActivated
+
+EnergyConsumerSuspended
+
+
+---
+
+## Consumed By
+
+- Organization Profile
+- Household Profile
+- Site
+
+---
+
+# 6. Organization Profile Module
+
+## Owns
+
+
+organization_profiles
+
+
+---
+
+## Depends On
+
+
+Consumer
+
+
+---
+
+## Publishes
+
+
+OrganizationProfileCreated
+
+
+---
+
+## Consumed By
+
+- Site
+- Analytics
+
+---
+
+# 7. Household Profile Module
+
+## Owns
+
+
+household_profiles
+
+
+---
+
+## Depends On
+
+
+Consumer
+
+
+---
+
+## Publishes
+
+
+HouseholdProfileCreated
+
+
+---
+
+## Consumed By
+
+- Site
+- Analytics
+
+---
+
+# 8. Site Module
+
+## Owns
+
+
+sites
+
+
+---
+
+## Depends On
+
+
+Consumer
+
+Profiles
+
+
+---
+
+## Responsibility
+
+Manages physical operating locations.
+
+Examples:
+
+
+Shop
+
+Home
+
+Factory
+
+
+---
+
+## Publishes
+
+
+SiteCreated
+
+SiteActivated
+
+SiteDeactivated
+
+
+---
+
+## Consumed By
+
+- Asset
+- Analytics
+
+---
+
+# 9. Asset Module
+
+## Owns
+
+
+energy_assets
+
+
+---
+
+## Depends On
+
+
+Site
+
+
+---
+
+## Responsibility
+
+Manages:
+
+- Generator
+- Inverter
+- Solar
+- Battery
+- Grid connection
+
+---
+
+## Publishes
+
+
+EnergyAssetRegistered
+
+EnergyAssetActivated
+
+EnergyAssetRetired
+
+
+---
+
+## Consumed By
+
+- Operations
+- Fuel
+- Maintenance
+- Monitoring
+
+---
+
+# 10. Operations Module
+
+## Owns
+
+
+energy_operations
+
+
+---
+
+## Depends On
+
+
+Asset
+
+
+---
+
+## Responsibility
+
+Records energy behaviour.
+
+---
+
+## Publishes
+
+
+EnergyOperationRecorded
+
+
+---
+
+## Consumed By
+
+- Analytics
+- Fuel
+- Monitoring
+
+---
+
+# 11. Fuel Module
+
+## Owns
+
+
+fuel_inventory
+
+fuel_transactions
+
+
+---
+
+## Depends On
+
+
+Asset
+
+Operations
+
+
+---
+
+## Publishes
+
+
+FuelAdded
+
+FuelConsumed
+
+FuelLevelLow
+
+
+---
+
+## Consumed By
+
+- Analytics
+- Recommendation
+- Notification
+
+---
+
+# 12. Maintenance Module
+
+## Owns
+
+
+maintenance_records
+
+
+---
+
+## Depends On
+
+
+Asset
+
+
+---
+
+## Publishes
+
+
+MaintenanceScheduled
+
+MaintenanceCompleted
+
+
+---
+
+## Consumed By
+
+- Analytics
+- Notification
+
+---
+
+# 13. Monitoring Module
+
+## Owns
+
+
+alerts
+
+
+---
+
+## Depends On
+
+
+Asset
+
+Operations
+
+Fuel
+
+
+---
+
+## Publishes
+
+
+AlertTriggered
+
+AlertResolved
+
+
+---
+
+## Consumed By
+
+- Recommendation
+- Notification
+
+---
+
+# 14. Analytics Module
+
+## Owns
+
+
+reports
+
+aggregations
+
+
+---
+
+## Depends On
+
+
+Operations
+
+Fuel
+
+Maintenance
+
+Monitoring
+
+
+---
+
+## Publishes
+
+
+AnalyticsGenerated
+
+
+---
+
+## Consumed By
+
+- Recommendation
+- Notification
+
+---
+
+# 15. Recommendation Module
+
+## Owns
+
+
+recommendations
+
+
+---
+
+## Depends On
+
+
+Analytics
+
+Monitoring
+
+
+---
+
+## Publishes
+
+
+RecommendationGenerated
+
+
+---
+
+## Consumed By
+
+- Notification
+- Frontend
+
+---
+
+# 16. Notification Module
+
+## Owns
+
+Communication delivery.
+
+---
+
+## Depends On
+
+Almost all modules through events.
+
+---
+
+## Responsibilities
+
+- Email
+- SMS
+- Push notifications
+- User alerts
+
+---
+
+# 17. Dependency Rules
+
+## Rule 1
+
+No circular dependencies.
+
+Invalid:
+
+
+Asset → Site
+
+Site → Asset
+
+
+---
+
+## Rule 2
+
+No direct database access between modules.
+
+Invalid:
+
+
+AssetRepository
+
+querying
+
+sites table
+
+
+---
+
+## Rule 3
+
+Cross-module communication uses:
+
+- Events
+- Interfaces
+- Contracts
+
+---
+
+## Rule 4
+
+Higher intelligence modules depend on operational modules.
+
+Example:
+
+Allowed:
+
+
+Analytics → Operations
+
+
+Not:
+
+
+Operations → Analytics
+
+
+---
+
+# 18. Database Boundary Rule
+
+Each module owns its schema objects.
+
+Example:
+
+Asset owns:
+
+
+energy_assets
+
+
+Site owns:
+
+
+sites
+
+
+References:
+
+
+siteId UUID
+
+
+No foreign keys across modules.
+
+---
+
+# 19. Spring Modulith Package Direction
+
+Expected structure:
+
+
+com.powerpulse
+
+├── identity
+
+├── consumer
+
+├── organization
+
+├── household
+
+├── site
+
+├── asset
+
+├── operations
+
+├── fuel
+
+├── maintenance
+
+├── monitoring
+
+├── analytics
+
+├── recommendation
+
+└── notification
+
+
+---
+
+# Final Dependency Decision
+
+PowerPulse modules are organized around business capabilities.
+
+The dependency direction follows the energy lifecycle.
+
+The foundation is identity and consumer.
+
+The intelligence layer sits on top of trustworthy operational data.
