@@ -7,6 +7,7 @@
 ![Constitution](https://img.shields.io/badge/document-constitution-red?style=for-the-badge)
 ![Articles](https://img.shields.io/badge/articles-15-purple?style=for-the-badge)
 ![Priority](https://img.shields.io/badge/priority-non--negotiable-black?style=for-the-badge)
+![Scope](https://img.shields.io/badge/scope-all%20energy%20consumers-blueviolet?style=for-the-badge)
 
 </div>
 
@@ -14,17 +15,15 @@
 
 ## 🎯 Purpose
 
-This document defines the **non-negotiable principles** that govern the design, development, and evolution of PowerPulse.
-
-The purpose of this constitution is to ensure that as the platform grows, every technical and product decision remains aligned with the original mission:
+This document defines the principles that govern the design, development, and evolution of PowerPulse.
 
 <div align="center">
 
-> ### 🧭 *"Build the most reliable energy intelligence platform for Nigeria and Africa by creating a strong operational foundation before introducing intelligence."*
+> ### 🧭 *PowerPulse exists to build a trusted energy intelligence platform for Africa by helping every energy consumer understand, manage, and improve energy behaviour through reliable operational data.*
 
 </div>
 
-This document serves as a **decision filter** for:
+**The constitution guides:**
 
 | 🔍 Area |
 |---|
@@ -32,17 +31,15 @@ This document serves as a **decision filter** for:
 | 🏗️ Architecture decisions |
 | ⚖️ Engineering trade-offs |
 | 📋 Feature prioritization |
-| 🔮 Future expansions |
+| 🔮 Future expansion |
 
-> ⚠️ Any decision that conflicts with these principles must be carefully reviewed.
+> ⚠️ Any decision that conflicts with these principles requires **deliberate review**.
 
 ---
 
 ## 📖 Article 1 — PowerPulse Exists to Create Energy Understanding
 
-PowerPulse is **not** primarily an energy monitoring application. It is an **energy intelligence platform**.
-
-The fundamental transformation is:
+PowerPulse is an energy intelligence platform. It exists to transform:
 
 <div align="center">
 
@@ -50,12 +47,14 @@ The fundamental transformation is:
 
 </div>
 
-The platform exists to help users answer:
+PowerPulse helps energy consumers answer:
 
-- ⚡ What energy am I using?
-- 💵 What is it costing me?
-- 🔍 Why is it costing me that much?
-- 🛠️ What action should I take?
+- ⚡ What energy sources am I using?
+- 💵 What does my energy cost?
+- 🔍 Why does it cost this much?
+- 🛠️ What actions can reduce cost or improve reliability?
+
+**An Energy Consumer may be:** 🏠 Household · 🏢 Business · 🏛️ Institution · 🌆 *(future)* community or enterprise entity
 
 ---
 
@@ -67,7 +66,7 @@ Reliable intelligence requires reliable data.
 - 🤖 AI models
 - 🔮 Predictions
 - ⚙️ Automation
-- 📊 Complex analytics
+- 📊 Advanced analytics
 
 **...before establishing:**
 - ✅ Accurate energy records
@@ -75,8 +74,6 @@ Reliable intelligence requires reliable data.
 - ✅ Historical usage data
 - ✅ Asset information
 - ✅ Cost information
-
-**The sequence is:**
 
 ```
 📥 Data Collection
@@ -94,21 +91,22 @@ Reliable intelligence requires reliable data.
 
 ## 📖 Article 3 — Infrastructure Before Intelligence
 
-The foundation must come before advanced capability. PowerPulse follows this build philosophy:
+PowerPulse follows this build philosophy:
 
 ```
 🪪 Identity
-  └── 🏢 Organization
-        └── 📍 Site
-              └── 🔋 Energy Assets
-                    └── ⚙️ Energy Operations
-                          └── ⛽ Fuel Management
-                                └── 🔧 Maintenance
-                                      └── 📡 Monitoring
-                                            └── 📊 Analytics
-                                                  └── 💬 Recommendations
-                                                        └── 🎯 Optimization
-                                                              └── 🤖 Autonomy
+  └── 🌐 Energy Consumer
+        └── 🏢 Organization Profile / 🏠 Household Profile
+              └── 📍 Site
+                    └── 🔋 Energy Asset
+                          └── ⚙️ Energy Operations
+                                └── ⛽ Fuel
+                                      └── 🔧 Maintenance
+                                            └── 📡 Monitoring
+                                                  └── 📊 Analytics
+                                                        └── 💬 Recommendation
+                                                              └── 🎯 Optimization
+                                                                    └── 🤖 Autonomy
 ```
 
 > 🏛️ The platform must earn intelligence through accumulated operational knowledge.
@@ -117,30 +115,23 @@ The foundation must come before advanced capability. PowerPulse follows this bui
 
 ## 📖 Article 4 — Domain Owns Business Rules
 
-Business logic belongs **inside the domain model**. It does **not** belong in:
-
-- 🎛️ Controllers
-- 🧵 Application services
-- 🗄️ Database entities
-- 🧰 Utility classes
-
-**The responsibility boundaries are:**
-
-```
-🖥️  Presentation Layer
-        ↓
-🧵  Application Layer
-        ↓
-🧠  Domain Layer
-        ↓
-🗄️  Infrastructure Layer
-```
+Business rules belong **inside the domain model**.
 
 **The domain decides:**
 - ✅ What is valid
-- 📏 What rules apply
 - 🔄 What state transitions are allowed
-- 🎭 What business behaviour exists
+- 🎭 What behaviour exists
+- ⚖️ What business invariants must hold
+
+```
+🖥️  Presentation
+        ↓
+🧵  Application
+        ↓
+🧠  Domain
+        ↓
+🗄️  Infrastructure
+```
 
 | Layer | Responsibility |
 |---|---|
@@ -152,98 +143,94 @@ Business logic belongs **inside the domain model**. It does **not** belong in:
 
 ## 📖 Article 5 — Simplicity Before Complexity
 
-PowerPulse will avoid premature complexity.
-
 | ✅ Prefer | ❌ Avoid |
 |---|---|
-| Simple solutions | Over-engineered systems |
-| Clear boundaries | Unnecessary abstractions |
-| Understandable designs | Technology-driven decisions |
+| Clear boundaries | Technology-driven decisions |
+| Simple solutions | Unnecessary abstraction |
+| Understandable designs | Complexity without business value |
 | Incremental evolution | — |
 
-> ⚖️ Complexity must be **earned** by real business requirements.
+> ⚖️ Complexity must be **earned**.
 
 ---
 
 ## 📖 Article 6 — Build for Nigerian Reality First 🇳🇬
 
-PowerPulse is designed around African energy conditions. The platform must understand:
+PowerPulse is designed around African energy realities. The platform must understand:
 
 - ⛽ Generator dependence
 - 💹 Fuel economics
 - 🔌 Grid instability
-- 🏪 Small business constraints
-- 💰 Energy affordability challenges
+- 💰 Energy affordability
+- 🏪 SME constraints
+- 🏠 Household energy challenges
 
-> 🎯 A theoretically perfect global solution that ignores Nigerian reality is **not** a PowerPulse solution.
+> 🎯 A global solution that ignores Nigerian reality is **not** a PowerPulse solution.
 
 ---
 
 ## 📖 Article 7 — Operational Truth Over Assumption
 
-PowerPulse must always distinguish between:
+PowerPulse distinguishes between observed and estimated information.
 
 | 📡 Observed Data | 🔮 Estimated Data |
 |---|---|
-| Information directly captured from operations | Calculated or inferred information |
-| Generator runtime | Predicted fuel depletion |
-| Fuel purchase | Expected cost |
-| Energy consumption | Estimated consumption |
-| Grid availability | — |
+| Generator runtime | Fuel prediction |
+| Fuel purchase | Expected depletion |
+| Energy readings | Forecast consumption |
+| Grid availability | Future behaviour |
 
 > 🚫 The system must **never** present assumptions as facts.
 
 ---
 
-## 📖 Article 8 — Every Decision Must Preserve Future Intelligence
+## 📖 Article 8 — Preserve Future Intelligence
 
-Current implementation choices should create opportunities for future intelligence.
-
-**However — future capability must not distort current design.**
+Current decisions must support future intelligence. However:
 
 <div align="center">
 
-> 🧭 *"Design today's foundation to support tomorrow's intelligence, but do not build tomorrow before today's needs exist."*
+> 🧭 *"Do not build tomorrow's intelligence before today's operational foundation exists."*
 
 </div>
+
+> 🎯 Design for future capability **without distorting current needs**.
 
 ---
 
 ## 📖 Article 9 — Modular Boundaries Must Be Protected
 
-PowerPulse is built as a **modular monolith**. Modules represent business capabilities:
+PowerPulse is a **modular monolith**. Modules represent business capabilities:
 
-`🪪 Identity` · `🏢 Organization` · `📍 Site` · `🔋 Energy Asset` · `⚙️ Operations` · `⛽ Fuel` · `🔧 Maintenance` · `📊 Analytics`
+`🪪 Identity` · `🌐 Energy Consumer` · `🏢 Organization Profile` · `🏠 Household Profile` · `📍 Site` · `🔋 Energy Asset` · `⚙️ Energy Operations` · `⛽ Fuel` · `🔧 Maintenance` · `📡 Monitoring` · `📊 Analytics` · `💬 Recommendation` · `🔔 Notification`
 
 **Modules must:**
 - 🏠 Own their business rules
-- 🔒 Control their internal data
-- 📞 Communicate through clear contracts
+- 🔒 Control internal data
+- 📞 Communicate through contracts
 - 🚫 Avoid unnecessary coupling
 
 ---
 
 ## 📖 Article 10 — Events Are the Language Between Modules
 
-Modules communicate primarily through **domain events**.
+Modules communicate through meaningful domain events.
 
 ```
-📢 OrganizationRegistered
+📢 EnergyConsumerRegistered
+📢 OrganizationProfileCreated
+📢 HouseholdProfileCreated
 📢 SiteCreated
 📢 EnergyAssetRegistered
 📢 FuelConsumed
 📢 MaintenanceCompleted
 ```
 
-Events represent **business facts that already happened**.
-
-> 🚫 Events should not become simple technical messages — they must have business meaning.
+> 📜 Events represent business facts that already happened.
 
 ---
 
 ## 📖 Article 11 — Reliability Before Features
-
-PowerPulse is intended to become infrastructure people depend on.
 
 <div align="center">
 
@@ -264,25 +251,21 @@ PowerPulse is intended to become infrastructure people depend on.
 
 ## 📖 Article 12 — No Intelligence Theatre 🎭
 
-PowerPulse will avoid building features simply because they *appear* intelligent.
-
-**Rejected approaches:**
+**Rejected:**
 - ❌ AI dashboards without useful data
-- ❌ Predictions without historical behaviour
+- ❌ Predictions without history
 - ❌ Machine learning without operational need
 - ❌ Complex models replacing simple rules
 
-> 💡 Intelligence must create **measurable user value**.
+> 💡 Intelligence must create **measurable value**.
 
 ---
 
-## 📖 Article 13 — Every Feature Must Answer a User Problem
-
-Before building any capability, the question is:
+## 📖 Article 13 — Every Feature Must Solve a Real Problem
 
 <div align="center">
 
-> ### ❓ *"What real energy decision does this help a user make?"*
+> ### ❓ *"What real energy decision does this help an energy consumer make?"*
 
 </div>
 
@@ -290,29 +273,29 @@ Before building any capability, the question is:
 
 ---
 
-## 📖 Article 14 — Energy Is a System, Not a Single Asset
+## 📖 Article 14 — Energy Is a System
 
-PowerPulse understands energy as an **ecosystem**. A business does not simply own a generator — it operates a system:
+Energy is not a single asset. PowerPulse models:
 
 <div align="center">
 
-**⚡ Energy Sources ➕ 🔋 Assets ➕ 📈 Usage Patterns ➕ 💵 Costs ➕ 🔧 Maintenance ➕ 🏢 Business Operations**
+**⚡ Energy Sources ➕ 🔋 Assets ➕ 📈 Usage Patterns ➕ 💵 Costs ➕ 🔧 Maintenance ➕ 🌐 Consumer Operations**
 
 </div>
 
-> 🧩 The platform must model the **complete system**.
+> 🧩 The platform must understand the **complete energy system**.
 
 ---
 
 ## 📖 Article 15 — Long-Term Responsibility
 
-PowerPulse is being built with the ambition of becoming important infrastructure. Every decision must consider:
+Every decision must consider:
 
-- 📈 Future scale
-- 🔒 Data integrity
+- 📈 Scale
 - 🔐 Security
+- 🔒 Data integrity
 - 🛠️ Maintainability
-- 🌍 National and continental relevance
+- 🌍 African relevance
 
 > 🎯 The goal is not simply to build software. The goal is to build a platform capable of supporting smarter energy decisions across Africa.
 
